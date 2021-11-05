@@ -5,7 +5,7 @@
 [![Release Version](https://img.shields.io/github/v/release/jotata/SymconJoTTACoE)](https://github.com/jotata/SymconJoTTACoE/releases)
 
 # SymconJoTTACoE
-Erweiterung zum Lesn/Schreiben der Werte eines Gerätes von Technische Alternative via CoE/CMI in IP-Symcon.
+Erweiterung zum Lesen/Schreiben der Werte eines Gerätes von Technische Alternative via CoE/CMI in IP-Symcon.
 
 ## Dokumentation
 <p align="right"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9M6W4KM34HWMA&source=url" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>

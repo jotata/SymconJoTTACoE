@@ -1,0 +1,6 @@
+[submodule "tests/stubs"]
+	path = tests/stubs
+	url = https://github.com/symcon/SymconStubs
+[submodule "libs"]
+	path = libs
+	url = https://github.com/jotata/SymconJoTLibs
