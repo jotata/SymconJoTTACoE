@@ -1,0 +1,27 @@
+{
+    "status": [
+        {
+            "code": 408, 
+            "icon": "error", 
+            "caption": "Error - Request Timeout!"
+        },{
+            "code": 416, 
+            "icon": "error", 
+            "caption": "Error - Range Not Satisfiable / Wrong Device!"
+        },{
+            "code": 428, 
+            "icon": "error", 
+            "caption": "Error - Precondition Required!"
+        }
+    ],
+    "elements":[
+        {
+            
+        }
+    ],
+    "actions":[
+        {
+            
+        }
+    ]
+}

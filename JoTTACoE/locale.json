@@ -1,0 +1,9 @@
+{
+    "translations": {
+        "de": {
+            "Error - Request Timeout!": "Fehler - Zeitüberschreitung bei der Geräte-Abfrage!",
+            "Error - Range Not Satisfiable / Wrong Device!": "Fehler - Erhaltene Antwort nicht passend / Falsches Gerät!",
+            "Error - Precondition Required!": "Fehler - Voraussetzungen nicht erfüllt!"
+        }
+    }
+}

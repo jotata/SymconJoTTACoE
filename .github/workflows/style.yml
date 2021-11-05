@@ -1,0 +1,20 @@
+name: Check Style
+
+on: [workflow_dispatch, push, pull_request]
+
+jobs:
+
+  style:
+ 
+    runs-on: ubuntu-latest
+ 
+    steps:
+    - uses: actions/checkout@master
+      with:
+        submodules: false
+
+    - name: Install latest PHP-CS-Fixer
+      run: wget https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v3.2.1/php-cs-fixer.phar
+
+    - name: Run Checks
+      run: PHP_CS_FIXER_IGNORE_ENV=1 php php-cs-fixer.phar fix --config=.style/.php-cs-fixer.php -v --dry-run --allow-risky=yes .
