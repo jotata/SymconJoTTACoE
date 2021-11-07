@@ -3,12 +3,57 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   05.11.2021 11:43:40
+ * @Last Modified:   07.11.2021 11:37:38
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
  *                   (http://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
  */
+
+Integration CoE in FHEM: https://wiki.fhem.de/wiki/CanOverEthernet
+Forum FHEM: https://forum.fhem.de/index.php/topic,96170.0.html
+GitHub FHEM-Modul: https://github.com/delmar43/FHEM
+CMI-IP: 10.0.1.52
+CMI-Port: UDP 5441
+mögliche KnotenNr: 1-62
+mögliche (Netzwerk)AusgangsNr: 1-32
+Jedes CAN-Gerät kann:
+- 32 Ausgänge versenden (jeweils mit seiner KnotenNr als Sender und dem entsprechenden (Netzwerk)Ausgang)
+- 64 Eingänge vom CAN-Bus einlesen (vom Sender KnotenNr x (Netzwerk)Ausgang y) und intern zur Verfügung stellen
+Das CMI kann via CoE 64 analoge und 64 digitale Konfigurationen verwalten. Diese können jeweils als Sender 1-64 mit NetzwerkAusgang 1-32 konfiguriert werden.
+Das empfangende CMI (definiert via IP) sendet die Pakete mit dem Sender & (Netzwerk)Ausgang von der Remote-CMI an den internen CAN-Bus weiter. Die Geräte können die Daten danach vom Bus auslesen.
+
+Bei den CoE-Paketen werden mehrere (Netzwerk)Ausgänge (Analog 4, Digital 16) in einem einzelnen Paket als Blöcke versendet/empfangen. Daher muss der aktuelle Wert von IPS mitgesendet werden, auch wenn sich dieser nicht geändert hat!
+Analoge Pakete CoE (erkennbar am Block aus Byte 2): 
+- Byte 1 = SenderKnoten
+- Byte 2 = Block (1-8) => (1=A1-A4, 2=A5-A8, 3=A9-A12, 4=A13-A16, 5=A17-A20, 6=A21-A24, 7=A25-A28, 8=A29-A32) => es werden immer 4 NetzwerkAusgänge pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
+- Byte 3+4 = Wert 1 (unsigned Short)
+- Byte 5+6 = Wert 2 (unsigned Short)
+- Byte 7+8 = Wert 3 (unsigned Short)
+- Byte 9+10 = Wert 4 (unsigned Short)
+- Byte 11 = Einheit/Datentyp Wert 1
+- Byte 12 = Einheit/Datentyp Wert 2
+- Byte 13 = Einheit/Datentyp Wert 3
+- Byte 14 = Einheit/Datentyp Wert 4
+
+Einheit/Datentyp (gemäss 6.2.4.2 Unit aus Doku JSON-API)
+01 = °C => Wert * 0.1
+10 = Tage => Wert * 1
+usw.
+
+Digitale Pakete CoE (erkennbar am Block aus Byte 2): 
+- Byte 1 = SenderKnoten
+- Byte 2 = Block (0,9) => (0=A1-A16, 9=A17-A32) => es werden immer 16 Bit (16 Ausgänge) pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet 
+- Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1)
+- Byte 5-14 = nicht genutzt (aber anscheinend mit 0 aufgefüllt)
+
+Integration IPS:
+- hört grundsätzlich auf alle Sender & NetzwerkAusgänge (?) Könnte pro Instanz auch nur auf einen Sender hören (?)
+- Erstellt Variablen mit Sender & NetzwerkAusgang für Empfang/Senden oder beides => eine Instanz kann Werte von verschiedenen Sendern empfangen und mit der eigenen KnotenNr versenden
+- sichcherstellen, dass jeweils nur eine Instanz mit derlseben KnotenNr existiert
+
+TODO:
+- 
 
 FEATURES & FIXES V1.0
 -
