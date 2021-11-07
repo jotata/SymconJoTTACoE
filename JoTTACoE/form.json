@@ -16,12 +16,54 @@
     ],
     "elements":[
         {
-            
+            "type": "ExpansionPanel",
+            "caption": "Configuration Remote CMI",
+            "expanded": "true",
+            "items": [
+                {
+                    "type": "ValidationTextBox",
+                    "name": "RemoteIP",
+                    "caption": "IP Address",
+                    "validate": "^(?!0)(?!.*\\.$)((1?\\d?\\d|25[0-5]|2[0-4]\\d)(\\.|$)){4}$"
+                },{
+                    "type": "NumberSpinner",
+                    "name": "RemoteNodeNr",
+                    "caption": "Listen to Node Number",
+                    "suffix": "(0 = disabled)",
+                    "minimum": 0,
+                    "maximum": 62 
+                }
+            ]
+        },{
+            "type": "ExpansionPanel",
+            "caption": "Configuration CoE Node",
+            "expanded": "true",
+            "items": [
+                {
+                    "type": "NumberSpinner",
+                    "name": "NodeNr",
+                    "caption": "Own Node Number",
+                    "minimum": 1,
+                    "maximum": 62 
+                },{
+                    "type": "NumberSpinner",
+                    "name": "Analog",
+                    "caption": "Number of analog variables",
+                    "minimum": 0,
+                    "maximum": 32 
+                },{
+                    "type": "NumberSpinner",
+                    "name": "Digital",
+                    "caption": "Number of digital variables",
+                    "minimum": 0,
+                    "maximum": 32 
+                },{
+                    "type": "CheckBox",
+                    "name": "UpdateProfiles",
+                    "caption": "Auto-Update variable profiles from Remote CMI"
+                }
+            ]
         }
     ],
-    "actions":[
-        {
-            
-        }
-    ]
+    "actions":[]
 }
