@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   07.11.2021 11:42:28
+ * @Last Modified:   08.11.2021 22:24:30
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -47,6 +47,21 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyInteger('Digital', 1); //Anzahl Digitale Variablen
         $this->RegisterPropertyBoolean('UpdateProfiles', 1); //Automatische Updates der Profile via CMI
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
+
+        //Units einlesen
+        $units = file_get_contents(__DIR__ . '/units.json');
+        $units = json_decode($units, true, 4);
+        if (json_last_error() !== JSON_ERROR_NONE) {//Fehler darf nur beim Entwickler auftreten (nach Anpassung der JSON-Daten). Wird daher direkt als echo ohne Übersetzung ausgegeben.
+            echo 'Create - Error in JSON (' . json_last_error_msg() . '). Please check File-Content of ' . __DIR__ . '/units.json and run PHPUnit-Test \'testUnits\'';
+            exit;
+        }
+        $aUnits = [];
+        foreach ($units as $u) { //Idents und notwendige Parameter einlesen
+            $aUnits[$u['UnitID']] = $u;
+            unset($aUnits[$u['UnitID']]['UnitID']);
+            //Tests sind nicht nötig, da die unit.json mittels PHPUnit-Tests kontrolliert wird und die Daten somit stimmen sollten.
+        }
+        $this->SetBuffer('Units', json_encode($aUnits));
     }
 
     /**
@@ -75,6 +90,7 @@ class JoTTACoE extends IPSModule {
             $filter = '.*' . preg_quote(',"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
             $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss Host-IP aus dem UDP-Socket entsprechen
         }
+        $this->SendDebug('Set ReceiveDataFilter to', $filter . '.*', 0);
         $this->SetReceiveDataFilter($filter . '.*');
 
         //Analoge Instanz-Variablen pflegen
@@ -111,7 +127,7 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data) {
-        //Änderung der Host-IP im UDP-Socket muss $this->ChangeReceiveDataFilter() aufrufen
+        
     }
 
     /**
@@ -123,53 +139,85 @@ class JoTTACoE extends IPSModule {
     public function ReceiveData($JSONString) {
 		$data = json_decode($JSONString);
         $buffer = utf8_decode($data->Buffer);
-        $header = unpack('CNodeNr/CLength', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
+        $header = unpack('CNodeNr/CBlock', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
         $buffer = substr($buffer, 2); //Header entfernen
         
-        //Daten im Buffer sind wie folgt aufgebaut:
-        //1 Byte - NodeNr
-        //1 Byte - Typ/Adresse (0 = Digtal, > 1 = Analoge Adresse)
-        //4x 2 Byte - Daten
-        //4x 1 Byte - Datentypen
+        /** Daten im Buffer sind wie folgt aufgebaut:
+        * Analoge Pakete CoE (erkennbar am Block aus Byte 2): 
+        * - Byte 1 = SenderKnoten
+        * - Byte 2 = Block (1-8) => (1=A1-A4, 2=A5-A8, 3=A9-A12, 4=A13-A16, 5=A17-A20, 6=A21-A24, 7=A25-A28, 8=A29-A32) => es werden immer 4 NetzwerkAusgänge pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
+        * - Byte 3+4 = Wert 1 (unsigned Short)
+        * - Byte 5+6 = Wert 2 (unsigned Short)
+        * - Byte 7+8 = Wert 3 (unsigned Short)
+        * - Byte 9+10 = Wert 4 (unsigned Short)
+        * - Byte 11 = Einheit/Datentyp Wert 1
+        * - Byte 12 = Einheit/Datentyp Wert 2
+        * - Byte 13 = Einheit/Datentyp Wert 3
+        * - Byte 14 = Einheit/Datentyp Wert 4
+        *
+        * Digitale Pakete CoE (erkennbar am Block aus Byte 2): 
+        * - Byte 1 = SenderKnoten
+        * - Byte 2 = Block (0,9) => (0=A1-A16, 9=A17-A32) => es werden immer 16 Bit (16 Ausgänge) pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet 
+        * - Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1)
+        * - Byte 5-14 = nicht genutzt (aber anscheinend mit 0 aufgefüllt)
+        */
 
-        //Art der Daten (Digital / Analog) ermitteln
-        if ($header['Length'] > 0) { //Analoge Daten
-            $this->SendDebug('Received data (analog)', $buffer, 1);
-            $x = unpack('s4Value/C4Type', $buffer);
-        } else { // Digitale Daten
-            $this->SendDebug('Received data (digital)', $buffer, 1);
-            $hex = unpack('H*', $buffer);
-            $x = base_convert($hex[1], 16, 2);
-            $values = str_split($x, 1);
+        //Daten verarbeiten 
+        $units = json_decode($this->GetBuffer('Units'));
+        $values = [];
+        if ($header['Block'] == 0 || $header['Block'] == 9) { //Digitale Daten
+            if ($header['Block'] == 0) {
+                $block = 1;
+            } else {
+                $block = 17;
+            }
+            $strBlock = 'block D' . $block . '-D' . ($block + 16);
+            $this->SendDebug("Received data ($strBlock) RAW", $buffer, 1);
+            $hex = unpack('H2', $buffer); //nur Byte 3+4 enthalten digitale Daten
+            $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
+            $bin = str_repeat('0', (16 - strlen($bin))) . $bin; //auf 16 Bit mit 0 auffüllen
+            $buffer = strrev($bin); //Bits in Reihenfolge umdrehen
+            $this->SendDebug("Converted data ($strBlock) -> Bits", $bin, 0);
+            for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
+                $bit = substr($buffer, $i, 1);
+                $ident = 'Digital' . ($block+$i);
+                $values[$ident]['Value'] = $bit;
+                $values[$ident]['Suffix'] = '';
+            }
+        } else if ($header['Block'] > 0 && $header['Block'] < 9) { //Analoge Daten
+            $block = (($header['Block'] -1) * 4 +1);
+            $strBlock = 'block A' . $block . '-A' . ($block + 3); 
+            $this->SendDebug("Received data ($strBlock) RAW", $buffer, 1);
+            $x = unpack('s4Value/C4UnitID', $buffer);
+            for ($i = 0; $i < 4; $i++) { //Werte berechnen und den entsprechenden Values zuweisen
+                $val = $x['Value' . ($i+1)];
+                $unitID = $x['UnitID' . ($i+1)];
+                $ident = 'Analog' . ($block+$i);
+                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, $units[$unitID]->Decimals);
+                $values[$ident]['Suffix'] = $units[$unitID]->Suffix;
+            }
             
-            for ($i = 0; $i < strlen($buffer); $i++) {
-                $bin = decbin(ord($buffer[$i])); //Jedes Byte in Binär umwandeln
-                $bin = base_convert(bin2hex($buffer[$i]), 16, 2);
-                //if (strlen($bin) < 8 ) {
-                //    for ($j = 8; $j > $binlen; $binlen++) {
-                //        $prep .= '0';
-               //     }
-                //} 
+        } else { //Ungültige Daten
+            $this->ThrowMessage('Unknown data header (block): ' . $header['Block'] . ' - Skipping');
+            return;
+        }
 
+        //Values in Instanz-Variablen schreiben
+        $strValues = '';
+        $discarded = '';
+        foreach ($values as $ident => $value){
+            $strValues .= " | $ident: " . $value['Value'] . $value['Suffix'];
+            if (@$this->GetIDForIdent($ident) === false) { //Variable nicht aktiv
+                $discarded .= ", $ident";
+            } else {
+                $this->SetValue($ident, $value['Value']);
             }
         }
-       
+        $this->SendDebug("Converted data ($strBlock) -> Values", trim($strValues, ' |'), 0);
+        if (strlen($discarded) > 0) {
+            $this->SendDebug('Discarding received value(s)', 'Variable(s) not active: ' . trim($discarded, ','), 0);
+        }
 	}
-
-    private function HandleAnalogValues(array $header, string $data) {
-        $x = unpack('s s s s C C C C', $data);
-    }
-
-    /**
-     * IPS-Instanz Funktion PREFIX_RequestRead.
-     * Ließt alle/gewünschte Werte aus dem Gerät.
-     * @param bool|string optional $force wenn auch nicht gepollte Values gelesen werden sollen.
-     * @access public
-     * @return array mit den angeforderten Werten, NULL bei Fehler oder Wert wenn nur ein Wert.
-     */
-    public function RequestRead() {
-    
-    }
 
     /**
      * Wird von IPS-Instanz Funktion PREFIX_RequestAction aufgerufen
@@ -181,6 +229,24 @@ class JoTTACoE extends IPSModule {
      */
     private function RequestVariableAction(string $Ident, $Value) {
         
+    }
+
+    /** 
+     * Verschiebt das Komma in $Value auf $ToDecimals Kommastellen
+     * Werte werden im CoE immer als ganze Zahlen mit Angabe der UnitID übertragen.
+     * Über die UnitID sind die Kommastellen für den Wert und die Einheit definiert.
+     * @param mixed $Value Wert zum konvertieren
+     * @param int $ToDecimals Anzahl Nachkommastellen für den Output
+     * @return float konvertierter Wert
+     */
+    function UnitConvertDecimals($Value, int $ToDecimals) {
+        $val = str_replace('.', '', strval($Value));
+        if ($ToDecimals !== 0) {
+            $low = substr($val, -$ToDecimals);
+            $high = substr($val, 0, (strlen($val) - $ToDecimals));
+            $val = "$high.$low";
+        }
+        return floatval($val);
     }
 
     public function Send(string $Text, string $ClientIP, int $ClientPort) {
