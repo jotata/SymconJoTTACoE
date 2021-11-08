@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   07.11.2021 11:37:38
+ * @Last Modified:   08.11.2021 22:40:03
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -31,15 +31,17 @@ Analoge Pakete CoE (erkennbar am Block aus Byte 2):
 - Byte 5+6 = Wert 2 (unsigned Short)
 - Byte 7+8 = Wert 3 (unsigned Short)
 - Byte 9+10 = Wert 4 (unsigned Short)
-- Byte 11 = Einheit/Datentyp Wert 1
-- Byte 12 = Einheit/Datentyp Wert 2
-- Byte 13 = Einheit/Datentyp Wert 3
-- Byte 14 = Einheit/Datentyp Wert 4
+- Byte 11 = UnitID Wert 1
+- Byte 12 = UnitID Wert 2
+- Byte 13 = UnitID Wert 3
+- Byte 14 = UnitID Wert 4
 
-Einheit/Datentyp (gemäss 6.2.4.2 Unit aus Doku JSON-API)
+UnitID (gemäss 6.2.4.2 Unit aus Doku JSON-API)
 01 = °C => Wert * 0.1
 10 = Tage => Wert * 1
 usw.
+Werte werden immer dimensionslos (als Signed Short  / 16Bit Integer von -32768 bis +32767) übertragen. Anschliessend bestimmt die UnitID, um wieviele Stellen das Komma nach links geschoben wird um den effektiven Wert mit Nachkommastellen zu erhalten.
+Bsp: Temperatur 3.2°C => Wert: 32 UnitID: 1 (Einheit: °C Nachkommastellen: 1)
 
 Digitale Pakete CoE (erkennbar am Block aus Byte 2): 
 - Byte 1 = SenderKnoten
@@ -50,13 +52,21 @@ Digitale Pakete CoE (erkennbar am Block aus Byte 2):
 Integration IPS:
 - hört grundsätzlich auf alle Sender & NetzwerkAusgänge (?) Könnte pro Instanz auch nur auf einen Sender hören (?)
 - Erstellt Variablen mit Sender & NetzwerkAusgang für Empfang/Senden oder beides => eine Instanz kann Werte von verschiedenen Sendern empfangen und mit der eigenen KnotenNr versenden
-- sichcherstellen, dass jeweils nur eine Instanz mit derlseben KnotenNr existiert
+- sicherstellen, dass jeweils nur eine Instanz mit derlseben KnotenNr existiert
 
 TODO:
-- 
+x ReceiveData: Analoge Werte mit UnitID berechnen
+- ReceiveData: Werte Cachen, falls Variable deaktiviert ist, damit der gechachte Wert zurükgesendet werden kann
+- KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können. Empfangene Werte aus Cache in Konfigform anzeigen
+- SendData: ganze Funktionalität
+- Automatische Übernahme der Einheit (Profil)
+- PHPUnit-Test 'testUnits' für units.json
+- Cache via Script verfügbar machen (nur lesend)?
+- Doku
 
 FEATURES & FIXES V1.0
--
+- ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
+  Alternativ prüfen, was TA hier vorschlägt...
 
 FEATURES & FIXES V??
 - Integration Tests
