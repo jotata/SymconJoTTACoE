@@ -12,7 +12,7 @@
             "Own Node Number": "Eigene Knoten-Nr",
             "Number of analog variables": "Anzahl analoge Variablen",
             "Number of digital variables": "Anzahl digitale Variablen",
-            "Auto-Update variable profiles from Remote-CMI": "Variablen-Profile automatisch an Remote-CMI anpassen"
+            "Auto-Update variable profiles from Remote CMI": "Variablen-Profile automatisch an Remote-CMI anpassen"
         }
     }
 }
