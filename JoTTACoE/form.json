@@ -46,23 +46,120 @@
                     "minimum": 1,
                     "maximum": 62 
                 },{
-                    "type": "NumberSpinner",
-                    "name": "Analog",
-                    "caption": "Number of analog variables",
-                    "minimum": 0,
-                    "maximum": 32 
-                },{
-                    "type": "NumberSpinner",
-                    "name": "Digital",
-                    "caption": "Number of digital variables",
-                    "minimum": 0,
-                    "maximum": 32 
-                },{
-                    "type": "CheckBox",
-                    "name": "UpdateProfiles",
-                    "caption": "Auto-Update variable profiles from Remote CMI"
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "List",
+                            "name": "Analog",
+                            "caption": "Analog variables",
+                            "visible": true,
+                            "add": false,
+                            "delete": false,
+                            "sort": {"column": "ID", "direction": "ascending"},
+                            "values": "$AnalogValues",
+                            "columns": [
+                                {
+                                    "caption": "#", 
+                                    "name": "ID", 
+                                    "width": "50px",
+                                    "save": true
+                                },{
+                                    "caption": "Ident", 
+                                    "name": "Ident", 
+                                    "width": "80px",
+                                    "save": true
+                                },{
+                                    "caption": "Name", 
+                                    "name": "Name", 
+                                    "width": "auto"
+                                },{
+                                    "caption": "Variable",
+                                    "name": "Variable",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                },{
+                                    "caption": "Read",
+                                    "name": "Read",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                },{
+                                    "caption": "Write",
+                                    "name": "Write",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                },{
+                                    "caption": "CoE Profile",
+                                    "name": "Profile",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                }
+                            ]
+                        },{
+                            "type": "List",
+                            "name": "Digital",
+                            "caption": "Digital variables",
+                            "visible": true,
+                            "add": false,
+                            "delete": false,
+                            "sort": {"column": "ID", "direction": "ascending"},
+                            "values": "$DigitalValues",
+                            "columns": [
+                                {
+                                    "caption": "#", 
+                                    "name": "ID", 
+                                    "width": "50px",
+                                    "save": true
+                                },{
+                                    "caption": "Ident", 
+                                    "name": "Ident", 
+                                    "width": "80px",
+                                    "save": true
+                                },{
+                                    "caption": "Name", 
+                                    "name": "Name", 
+                                    "width": "auto"
+                                },{
+                                    "caption": "Variable",
+                                    "name": "Variable",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                },{
+                                    "caption": "Read",
+                                    "name": "Read",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                },{
+                                    "caption": "Write",
+                                    "name": "Write",
+                                    "width": "80px",
+                                    "save": true,
+                                    "edit": {
+                                        "type": "CheckBox"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
                 }
-            ]
+            ]    
         }
     ],
     "actions":[]

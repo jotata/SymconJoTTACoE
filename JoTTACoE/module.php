@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   08.11.2021 22:24:30
+ * @Last Modified:   09.11.2021 22:32:49
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -43,8 +43,8 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyString('RemoteIP', ''); //IP der Remote-CMI
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
-        $this->RegisterPropertyInteger('Analog', 1); //Anzahl Analoge Variablen
-        $this->RegisterPropertyInteger('Digital', 1); //Anzahl Digitale Variablen
+        $this->RegisterPropertyString('Analog', ''); //Konfiguration Analoge Variablen
+        $this->RegisterPropertyString('Digital', ''); //Konfiguration Digitale Variablen
         $this->RegisterPropertyBoolean('UpdateProfiles', 1); //Automatische Updates der Profile via CMI
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
 
@@ -94,16 +94,14 @@ class JoTTACoE extends IPSModule {
         $this->SetReceiveDataFilter($filter . '.*');
 
         //Analoge Instanz-Variablen pflegen
-        $x = $this->ReadPropertyInteger('Analog');
-        for ($i = 1; $i <= 32; $i++){
-            $keep = ($i <= $x); //true, wenn $i innerhalb der Anzahl Analoger Variablen liegt, sonst false
-            $this->MaintainVariable("Analog$i", "Analog $i", VARIABLETYPE_FLOAT, '', $i, $keep);
+        $x = json_decode($this->ReadPropertyString('Analog'));
+        foreach ($x as $c){
+            $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, $c->Variable);
         }
         //Digitale Instanz-Variablen pflegen
-        $x = $this->ReadPropertyInteger('Digital');
-        for ($i = 1; $i <= 32; $i++){
-            $keep = ($i <= $x); //true, wenn $i innerhalb der Anzahl Digitaler Variablen liegt, sonst false
-            $this->MaintainVariable("Digital$i", "Digital $i", VARIABLETYPE_BOOLEAN, '', $i + 32, $keep);
+        $x = json_decode($this->ReadPropertyString('Digital'));
+        foreach ($x as $c){
+            $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, $c->Variable);
         }
     }
 
@@ -114,10 +112,30 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function GetConfigurationForm() {
-        
+        //Analoge In-/Outputs
+        for ($i = 1; $i <= 32; $i++) {
+            $id = @$this->GetIDForIdent("Analog$i");
+            $name = "Analog $i";
+            if ($id !== false) {
+                $name = IPS_GetObject($id)['ObjectName'];
+            }
+            $AnalogValues[] = ['ID' => $i, 'Ident' => "Analog$i", 'Name' => $name, 'Variable' => 0, 'Read' => 0, 'Write' => 0, 'Profile' => 0];
+        }
+
+        //Digitale In-/Outputs
+        for ($i = 1; $i <= 32; $i++) {
+            $id = @$this->GetIDForIdent("Digital$i");
+            $name = "Digital $i";
+            if ($id !== false) {
+                $name = IPS_GetObject($id)['ObjectName'];
+            }
+            $DigitalValues[] = ['ID' => $i, 'Ident' => "Digital$i", 'Name' => $name, 'Variable' => 0, 'Read' => 0, 'Write' => 0];
+        }
+
         //Variabeln in $form ersetzen
         $form = file_get_contents(__DIR__ . '/form.json');
-
+        $form = str_replace('"$AnalogValues"', json_encode($AnalogValues), $form);
+        $form = str_replace('"$DigitalValues"', json_encode($DigitalValues), $form);
         return $form;
     }
 

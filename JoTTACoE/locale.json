@@ -10,9 +10,11 @@
             "(0 = disabled)": "(0 = deaktiviert)",
             "Configuration CoE Node": "Konfiguration CoE-Knoten",
             "Own Node Number": "Eigene Knoten-Nr",
-            "Number of analog variables": "Anzahl analoge Variablen",
-            "Number of digital variables": "Anzahl digitale Variablen",
-            "Auto-Update variable profiles from Remote CMI": "Variablen-Profile automatisch an Remote-CMI anpassen"
+            "Analog variables": "Analoge Variablen",
+            "Digital variables": "Digitale Variablen",
+            "Read": "Lesen",
+            "Write": "Schreiben",
+            "CoE Profile": "CoE-Profil"
         }
     }
 }

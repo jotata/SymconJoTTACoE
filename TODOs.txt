@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   08.11.2021 22:40:03
+ * @Last Modified:   09.11.2021 22:17:43
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -56,8 +56,8 @@ Integration IPS:
 
 TODO:
 x ReceiveData: Analoge Werte mit UnitID berechnen
-- ReceiveData: Werte Cachen, falls Variable deaktiviert ist, damit der gechachte Wert zurükgesendet werden kann
-- KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können. Empfangene Werte aus Cache in Konfigform anzeigen
+- ReceiveData: Werte unter berücksichtigung der neuen Konfiguration speichern
+x KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können.
 - SendData: ganze Funktionalität
 - Automatische Übernahme der Einheit (Profil)
 - PHPUnit-Test 'testUnits' für units.json
