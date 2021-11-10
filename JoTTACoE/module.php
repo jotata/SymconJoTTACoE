@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   09.11.2021 22:32:49
+ * @Last Modified:   10.11.2021 20:10:11
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -43,8 +43,8 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyString('RemoteIP', ''); //IP der Remote-CMI
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
-        $this->RegisterPropertyString('Analog', ''); //Konfiguration Analoge Variablen
-        $this->RegisterPropertyString('Digital', ''); //Konfiguration Digitale Variablen
+        $this->RegisterPropertyString('Analog', '{}'); //Konfiguration Analoge Variablen
+        $this->RegisterPropertyString('Digital', '{}'); //Konfiguration Digitale Variablen
         $this->RegisterPropertyBoolean('UpdateProfiles', 1); //Automatische Updates der Profile via CMI
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
 
@@ -96,12 +96,12 @@ class JoTTACoE extends IPSModule {
         //Analoge Instanz-Variablen pflegen
         $x = json_decode($this->ReadPropertyString('Analog'));
         foreach ($x as $c){
-            $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, $c->Variable);
+            $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, ($c->Config > 0));
         }
         //Digitale Instanz-Variablen pflegen
         $x = json_decode($this->ReadPropertyString('Digital'));
         foreach ($x as $c){
-            $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, $c->Variable);
+            $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, ($c->Config > 0));
         }
     }
 
@@ -119,7 +119,7 @@ class JoTTACoE extends IPSModule {
             if ($id !== false) {
                 $name = IPS_GetObject($id)['ObjectName'];
             }
-            $AnalogValues[] = ['ID' => $i, 'Ident' => "Analog$i", 'Name' => $name, 'Variable' => 0, 'Read' => 0, 'Write' => 0, 'Profile' => 0];
+            $AnalogValues[] = ['ID' => $i, 'Ident' => "Analog$i", 'Name' => $name, 'Config' => 0, 'Profil' => 1];
         }
 
         //Digitale In-/Outputs
@@ -129,7 +129,7 @@ class JoTTACoE extends IPSModule {
             if ($id !== false) {
                 $name = IPS_GetObject($id)['ObjectName'];
             }
-            $DigitalValues[] = ['ID' => $i, 'Ident' => "Digital$i", 'Name' => $name, 'Variable' => 0, 'Read' => 0, 'Write' => 0];
+            $DigitalValues[] = ['ID' => $i, 'Ident' => "Digital$i", 'Name' => $name, 'Config' => 0];
         }
 
         //Variabeln in $form ersetzen

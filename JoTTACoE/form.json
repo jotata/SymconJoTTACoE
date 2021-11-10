@@ -66,7 +66,7 @@
                                 },{
                                     "caption": "Ident", 
                                     "name": "Ident", 
-                                    "width": "80px",
+                                    "width": "100px",
                                     "save": true
                                 },{
                                     "caption": "Name", 
@@ -74,27 +74,18 @@
                                     "width": "auto"
                                 },{
                                     "caption": "Variable",
-                                    "name": "Variable",
-                                    "width": "80px",
+                                    "name": "Config",
+                                    "width": "150px",
                                     "save": true,
                                     "edit": {
-                                        "type": "CheckBox"
-                                    }
-                                },{
-                                    "caption": "Read",
-                                    "name": "Read",
-                                    "width": "80px",
-                                    "save": true,
-                                    "edit": {
-                                        "type": "CheckBox"
-                                    }
-                                },{
-                                    "caption": "Write",
-                                    "name": "Write",
-                                    "width": "80px",
-                                    "save": true,
-                                    "edit": {
-                                        "type": "CheckBox"
+                                        "type": "Select",
+                                        "options": [
+                                            { "caption": "disabled", "value": 0 },
+                                            { "caption": "enabled", "value": 1 },
+                                            { "caption": "input", "value": 2 },
+                                            { "caption": "output", "value": 3 },
+                                            { "caption": "input / output", "value": 4 }
+                                        ]
                                     }
                                 },{
                                     "caption": "CoE Profile",
@@ -132,27 +123,18 @@
                                     "width": "auto"
                                 },{
                                     "caption": "Variable",
-                                    "name": "Variable",
-                                    "width": "80px",
+                                    "name": "Config",
+                                    "width": "150px",
                                     "save": true,
                                     "edit": {
-                                        "type": "CheckBox"
-                                    }
-                                },{
-                                    "caption": "Read",
-                                    "name": "Read",
-                                    "width": "80px",
-                                    "save": true,
-                                    "edit": {
-                                        "type": "CheckBox"
-                                    }
-                                },{
-                                    "caption": "Write",
-                                    "name": "Write",
-                                    "width": "80px",
-                                    "save": true,
-                                    "edit": {
-                                        "type": "CheckBox"
+                                        "type": "Select",
+                                        "options": [
+                                            { "caption": "disabled", "value": 0 },
+                                            { "caption": "enabled", "value": 1 },
+                                            { "caption": "input", "value": 2 },
+                                            { "caption": "output", "value": 3 },
+                                            { "caption": "input / output", "value": 4 }
+                                        ]
                                     }
                                 }
                             ]
