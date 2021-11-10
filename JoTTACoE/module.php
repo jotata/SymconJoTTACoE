@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   10.11.2021 20:10:11
+ * @Last Modified:   10.11.2021 20:58:42
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -83,7 +83,7 @@ class JoTTACoE extends IPSModule {
         
         //ReceiveDataFilter anpassen
         $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr'))), '"'); //RemoteNodeNr JSON-Codiert
-        if ($remoteNodeNr === '\u0000') { //Empfang deaktiviert
+        if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
             $filter = 'DEAKTIVIERT';
         } else { //Empfang aktiviert
             $remoteIP =  $this->ReadPropertyString('RemoteIP');
@@ -97,11 +97,21 @@ class JoTTACoE extends IPSModule {
         $x = json_decode($this->ReadPropertyString('Analog'));
         foreach ($x as $c){
             $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, ($c->Config > 0));
+            if ($c->Config > 2){ //Output oder Input/Output
+                $this->EnableAction($c->Ident);
+            } else if ($c->Config > 0) { //Nur wenn Variable vorhanden ist
+                $this->DisableAction($c->Ident);
+            }
         }
         //Digitale Instanz-Variablen pflegen
         $x = json_decode($this->ReadPropertyString('Digital'));
         foreach ($x as $c){
             $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, ($c->Config > 0));
+            if ($c->Config > 2){ //Output oder Input/Output
+                $this->EnableAction($c->Ident);
+            } else if ($c->Config > 0) { //Nur wenn Variable vorhanden ist
+                $this->DisableAction($c->Ident);
+            }
         }
     }
 
@@ -119,7 +129,7 @@ class JoTTACoE extends IPSModule {
             if ($id !== false) {
                 $name = IPS_GetObject($id)['ObjectName'];
             }
-            $AnalogValues[] = ['ID' => $i, 'Ident' => "Analog$i", 'Name' => $name, 'Config' => 0, 'Profil' => 1];
+            $AnalogValues[] = ['ID' => $i, 'Ident' => "Analog$i", 'Name' => $name, 'Config' => 0];
         }
 
         //Digitale In-/Outputs
@@ -151,7 +161,7 @@ class JoTTACoE extends IPSModule {
     /**
      * Interne Funktion des SDK.
      * Wird ausgeführt wenn eine Nachricht vom UDP-Socket empfangen wurde.
-     * im ReceiveDataFilter ist bereits sichergestellt, dass nur Pakete an die NodeNr der Instanz von der IP der CMI weitergeleitet werden.
+     * Im ReceiveDataFilter ist bereits sichergestellt, dass nur Pakete an die NodeNr der Instanz von der IP der CMI weitergeleitet werden.
      * @access public
      */
     public function ReceiveData($JSONString) {
@@ -223,9 +233,11 @@ class JoTTACoE extends IPSModule {
         //Values in Instanz-Variablen schreiben
         $strValues = '';
         $discarded = '';
+        $config = array_merge(json_decode($this->ReadPropertyString('Analog')), json_decode($this->ReadPropertyString('Digital')));
+        $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
         foreach ($values as $ident => $value){
             $strValues .= " | $ident: " . $value['Value'] . $value['Suffix'];
-            if (@$this->GetIDForIdent($ident) === false) { //Variable nicht aktiv
+            if (@$this->GetIDForIdent($ident) === false || $config[$ident] !== 2 && $config[$ident] !== 4) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
                 $discarded .= ", $ident";
             } else {
                 $this->SetValue($ident, $value['Value']);
@@ -233,13 +245,13 @@ class JoTTACoE extends IPSModule {
         }
         $this->SendDebug("Converted data ($strBlock) -> Values", trim($strValues, ' |'), 0);
         if (strlen($discarded) > 0) {
-            $this->SendDebug('Discarding received value(s)', 'Variable(s) not active: ' . trim($discarded, ','), 0);
+            $this->SendDebug('Discarding received value(s)', 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
         }
 	}
 
     /**
      * Wird von IPS-Instanz Funktion PREFIX_RequestAction aufgerufen
-     * und schreibt den Wert der Variable auf den Wechselrichter zurück
+     * und schreibt den Wert der Variable auf die Remote-CMI zurück
      * @param string $Ident der Variable
      * @param mixed $Value zu schreibender Wert
      * @return boolean true bei Erfolg oder false bei Fehler

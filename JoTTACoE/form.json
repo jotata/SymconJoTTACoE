@@ -87,14 +87,6 @@
                                             { "caption": "input / output", "value": 4 }
                                         ]
                                     }
-                                },{
-                                    "caption": "CoE Profile",
-                                    "name": "Profile",
-                                    "width": "80px",
-                                    "save": true,
-                                    "edit": {
-                                        "type": "CheckBox"
-                                    }
                                 }
                             ]
                         },{
