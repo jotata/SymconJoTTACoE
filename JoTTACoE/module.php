@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   10.11.2021 20:58:42
+ * @Last Modified:   10.11.2021 21:11:26
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -66,15 +66,6 @@ class JoTTACoE extends IPSModule {
 
     /**
      * Interne Funktion des SDK.
-     * Wird beim Entfernen des Modules aufgerufen
-     * @access public
-     */
-    public function Destroy() {
-		parent::Destroy();
-	}
-
-    /**
-     * Interne Funktion des SDK.
      * Wird ausgeführt wenn die Konfigurations-Änderungen gespeichet werden.
      * @access public
      */
@@ -124,22 +115,22 @@ class JoTTACoE extends IPSModule {
     public function GetConfigurationForm() {
         //Analoge In-/Outputs
         for ($i = 1; $i <= 32; $i++) {
-            $id = @$this->GetIDForIdent("Analog$i");
+            $id = @$this->GetIDForIdent("A$i");
             $name = "Analog $i";
             if ($id !== false) {
                 $name = IPS_GetObject($id)['ObjectName'];
             }
-            $AnalogValues[] = ['ID' => $i, 'Ident' => "Analog$i", 'Name' => $name, 'Config' => 0];
+            $AnalogValues[] = ['ID' => $i, 'Ident' => "A$i", 'Name' => $name, 'Config' => 0];
         }
 
         //Digitale In-/Outputs
         for ($i = 1; $i <= 32; $i++) {
-            $id = @$this->GetIDForIdent("Digital$i");
+            $id = @$this->GetIDForIdent("D$i");
             $name = "Digital $i";
             if ($id !== false) {
                 $name = IPS_GetObject($id)['ObjectName'];
             }
-            $DigitalValues[] = ['ID' => $i, 'Ident' => "Digital$i", 'Name' => $name, 'Config' => 0];
+            $DigitalValues[] = ['ID' => $i, 'Ident' => "D$i", 'Name' => $name, 'Config' => 0];
         }
 
         //Variabeln in $form ersetzen
@@ -208,7 +199,7 @@ class JoTTACoE extends IPSModule {
             $this->SendDebug("Converted data ($strBlock) -> Bits", $bin, 0);
             for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
-                $ident = 'Digital' . ($block+$i);
+                $ident = 'D' . ($block+$i);
                 $values[$ident]['Value'] = $bit;
                 $values[$ident]['Suffix'] = '';
             }
@@ -220,7 +211,7 @@ class JoTTACoE extends IPSModule {
             for ($i = 0; $i < 4; $i++) { //Werte berechnen und den entsprechenden Values zuweisen
                 $val = $x['Value' . ($i+1)];
                 $unitID = $x['UnitID' . ($i+1)];
-                $ident = 'Analog' . ($block+$i);
+                $ident = 'A' . ($block+$i);
                 $values[$ident]['Value'] = $this->UnitConvertDecimals($val, $units[$unitID]->Decimals);
                 $values[$ident]['Suffix'] = $units[$unitID]->Suffix;
             }
