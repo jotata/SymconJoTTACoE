@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   10.11.2021 21:11:26
+ * @Last Modified:   10.11.2021 23:15:21
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -249,7 +249,46 @@ class JoTTACoE extends IPSModule {
      * @access private
      */
     private function RequestVariableAction(string $Ident, $Value) {
-        
+        $type = substr($Ident, 0, 1);
+        $values = [];
+        $units = [];
+        if ($type == 'A') { //Analoge Daten
+            $config = json_decode($this->ReadPropertyString('Analog'));
+            $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
+            $block = ceil(intval(substr($Ident, 1)) / 4); //BlockNr (1-8) berechnen
+            $min = (($block -1) * 4 +1); //Erste ID des Blocks berechnen
+            for ($i = $min; $i <= ($min +3); $i++) { //Daten des ganzen Blocks ermitteln (es müssen immer 4 Werte miteinander gesendet werden)
+                $id = "A$i";
+                $values[$id] = 0;
+                $units[$id] = 0;
+                $vID = @$this->GetIDForIdent($id);
+                if ($config[$id] > 2 && $vID !== false) { //Als Output definiert & vorhanden
+                    $values[$id] = $this->UnitConvertDecimals($this->GetValue($id), 0); //CoE überträgt Werte immer als Ganzzahl ohne Komma
+                    $var = IPS_GetVariable($vID);
+                    if ($var['VariableCustomProfile'] == '') {
+                        $units[$id] = 0; //$var['VariableProfile']; //muss noch angepasst werden!
+                    }
+                }  
+            }
+            $values[$Ident] = $Value; //Neuen Wert im Block setzen (oben wird noch der Alte ausgelesen)
+        } else if ($type == 'D') { //Digitale Daten des ganzen Blocks ermitteln
+            /*$c = json_decode($this->ReadPropertyString('Digital'));
+            if ($id > 16){
+                $block = 16;
+            }
+            for ($i = 1; $i <= 16; $i++){
+                $values[$i]['Value'] = 0;
+                $values[$i]['UnitID'] = 0;
+                $Ident = 'D' . strval($i + $block);
+                if ($c->Config > 2 && @$this->GetIDForIdent($Ident) !== false) { //Als Output definiert & vorhanden
+                    $values[$i]['Value'] = intval($this->GetValue($Ident));
+                }  
+            }*/
+        }
+
+        //Temporär
+        $this->SetValue($Ident, $Value);
+        return true;
     }
 
     /** 
