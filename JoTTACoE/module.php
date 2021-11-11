@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   11.11.2021 18:13:55
+ * @Last Modified:   11.11.2021 19:03:02
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -23,8 +23,7 @@ class JoTTACoE extends IPSModule {
     use RequestAction;
     protected const PREFIX = 'JoTTACoE';
     protected const MODULEID = '{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}';
-    protected const STATUS_Error_WrongDevice = 416;
-    protected const STATUS_Error_RequestTimeout = 408;
+    protected const STATUS_Ok_InstanceActive = 102;
     protected const STATUS_Error_PreconditionRequired = 428;
     protected const LED_Off = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUAQMAAAC3R49OAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAADUExURcPDw9YpAkQAAAAJcEhZcwAAFiQAABYkAZsVxhQAAAANSURBVBjTY6AqYGAAAABQAAGwhtz8AAAAAElFTkSuQmCC';
     protected const LED_Read = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAA3SURBVDhPpcexDQAwCMAw/n+a7p6IKnnxzH7wiU984hOf+MQnPvGJT3ziE5/4xCc+8YlP/N3OA6M/joCROxOnAAAAAElFTkSuQmCC';
@@ -248,6 +247,11 @@ class JoTTACoE extends IPSModule {
      * @access private
      */
     private function RequestVariableAction(string $Ident, $Value) {
+        if ($this->HasActiveParent() === false) {
+            $this->SetStatus(self::STATUS_Error_PreconditionRequired);
+            return false;
+        }
+
         //Parameter definieren
         $type = substr($Ident, 0, 1);
         if ($type == 'A') { //Analoge Daten
@@ -268,56 +272,64 @@ class JoTTACoE extends IPSModule {
         $strBlock = "block $type$min-$type$max";
 
         //Werte von IPS auslesen
+        $units = json_decode($this->GetBuffer('Units'));
         $values = [];
+        $strValues = '';
         $discarded = '';
         $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
         for ($i = $min; $i <= $max; $i++) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
-            $values["$type$i"]['Value'] = 0;
-            $values["$type$i"]['UnitID'] = 0;
+            $v = 0;
+            $u = 0;
             $vID = @$this->GetIDForIdent("$type$i");
             if ($config["$type$i"] > 2 && $vID !== false) { //Als Output definiert & vorhanden
-                $values["$type$i"]['Value'] = $this->GetValue("$type$i");
+                if ("$type$i" == $Ident) { //neuen Wert übernehmen
+                    $v = $Value;
+                } else { //Wert von IPS-Variable auslesen
+                    $v = $this->GetValue("$type$i");
+                }
                 if ($type == 'A') { //Unit ist nur für Analoge Werte nötig
                     $var = IPS_GetVariable($vID);
                     if ($var['VariableCustomProfile'] == '') {
-                        $values["$type$i"]['UnitID'] = 0; //$var['VariableProfile']; //muss noch angepasst werden!
+                        $u = 0; //$var['VariableProfile']; //muss noch angepasst werden!
                     }
                 }
             } else {
                 $discarded .= "$type$i, ";
-            } 
+            }
+            $strValues .= " | $type$i: " . $v . $units[$u]->Suffix;
+            $values["$type$i"]['Value'] = $this->UnitConvertDecimals($v, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
+            $values["$type$i"]['UnitID'] = $u;
         }
-        $values[$Ident]['Value'] = floatval($Value); //Neuen Wert im Block setzen (oben wird noch der Alte ausgelesen)
         if (strlen($discarded) > 0) {
             $this->SendDebug("SEND DATA ($strBlock) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
         }
+        $this->SendDebug("SEND DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
 
-        //Daten versenden
-        $units = json_decode($this->GetBuffer('Units'));
-        $strValues = '';
+        //Daten senden
         $data = '';
-        foreach ($values as $id => $v) {
-            $strValues .= " | $id: " . $v['Value'] . $units[$v['UnitID']]->Suffix;
-            if ($type == 'A') {
-                //$data .= pack('s', $this->UnitConvertDecimals($v['Value'], 0)); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma
-                $values[$id]['Value'] = $this->UnitConvertDecimals($v['Value'], 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma
-            } 
-        }
-        if ($type == 'A') {
+        if ($type == 'A') { //Analoge Daten
             $data = pack('s4C4', ... array_column($values, 'Value'), ... array_column($values, 'UnitID')); //4x 16Bit Werte und 4x 8Bit UnitID
         } 
-        if ($type == 'D') {
+        if ($type == 'D') { //Digitale Daten
             $data = strrev(implode('', array_column($values, 'Value'))); //Umgekehrte Bit-Folge der Werte (16Bit)
             $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
         }
-        $this->SendDebug("SEND DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
         $this->SendDebug("SEND DATA ($strBlock) -> RAW", $data, 1);
-        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block) . $data); //Header hinzufügen
-        $this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}', "ClientIP" => $this->ReadPropertyString('RemoteIP'), "ClientPort" => 5441, "Buffer" => $data]));
+        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
+        $response = @$this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, "ClientIP" => $this->ReadPropertyString('RemoteIP'), "ClientPort" => 5441, "Buffer" => $data]));
 
-        //Temporär
-        $this->SetValue($Ident, $Value);
-        return true;
+        //Antwort UDP-Socket auswerten
+        if ($response !== false) { //kein Fehler seitens IPS
+            if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
+                $this->SetStatus(self::STATUS_Ok_InstanceActive);
+            }
+            if ($config[$Ident] < 4) { //UDP sendet keine Antwort zurück, wenn Variable jedoch ein Input/Output ist, müsste die CMI den neuen Wert zurückmelden.
+                $this->SetValue($Ident, $Value);
+            }
+            return true;
+        }
+        $this->SetStatus(self::STATUS_Error_PreconditionRequired);
+        return false;
     }
 
     /** 
