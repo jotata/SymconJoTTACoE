@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   10.11.2021 23:15:21
+ * @Last Modified:   11.11.2021 18:13:55
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -45,7 +45,6 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
         $this->RegisterPropertyString('Analog', '{}'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '{}'); //Konfiguration Digitale Variablen
-        $this->RegisterPropertyBoolean('UpdateProfiles', 1); //Automatische Updates der Profile via CMI
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
 
         //Units einlesen
@@ -191,12 +190,12 @@ class JoTTACoE extends IPSModule {
                 $block = 17;
             }
             $strBlock = 'block D' . $block . '-D' . ($block + 16);
-            $this->SendDebug("Received data ($strBlock) RAW", $buffer, 1);
+            $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
             $hex = unpack('H2', $buffer); //nur Byte 3+4 enthalten digitale Daten
             $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
             $bin = str_repeat('0', (16 - strlen($bin))) . $bin; //auf 16 Bit mit 0 auffüllen
             $buffer = strrev($bin); //Bits in Reihenfolge umdrehen
-            $this->SendDebug("Converted data ($strBlock) -> Bits", $bin, 0);
+            $this->SendDebug("RECEIVE DATA ($strBlock) -> Bits", $bin, 0);
             for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
                 $ident = 'D' . ($block+$i);
@@ -206,7 +205,7 @@ class JoTTACoE extends IPSModule {
         } else if ($header['Block'] > 0 && $header['Block'] < 9) { //Analoge Daten
             $block = (($header['Block'] -1) * 4 +1);
             $strBlock = 'block A' . $block . '-A' . ($block + 3); 
-            $this->SendDebug("Received data ($strBlock) RAW", $buffer, 1);
+            $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
             $x = unpack('s4Value/C4UnitID', $buffer);
             for ($i = 0; $i < 4; $i++) { //Werte berechnen und den entsprechenden Values zuweisen
                 $val = $x['Value' . ($i+1)];
@@ -234,9 +233,9 @@ class JoTTACoE extends IPSModule {
                 $this->SetValue($ident, $value['Value']);
             }
         }
-        $this->SendDebug("Converted data ($strBlock) -> Values", trim($strValues, ' |'), 0);
+        $this->SendDebug("RECEIVE DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
         if (strlen($discarded) > 0) {
-            $this->SendDebug('Discarding received value(s)', 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
+            $this->SendDebug("RECEIVE DATA ($strBlock) -> Skipped", 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
         }
 	}
 
@@ -249,42 +248,72 @@ class JoTTACoE extends IPSModule {
      * @access private
      */
     private function RequestVariableAction(string $Ident, $Value) {
+        //Parameter definieren
         $type = substr($Ident, 0, 1);
-        $values = [];
-        $units = [];
         if ($type == 'A') { //Analoge Daten
             $config = json_decode($this->ReadPropertyString('Analog'));
-            $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
             $block = ceil(intval(substr($Ident, 1)) / 4); //BlockNr (1-8) berechnen
             $min = (($block -1) * 4 +1); //Erste ID des Blocks berechnen
-            for ($i = $min; $i <= ($min +3); $i++) { //Daten des ganzen Blocks ermitteln (es müssen immer 4 Werte miteinander gesendet werden)
-                $id = "A$i";
-                $values[$id] = 0;
-                $units[$id] = 0;
-                $vID = @$this->GetIDForIdent($id);
-                if ($config[$id] > 2 && $vID !== false) { //Als Output definiert & vorhanden
-                    $values[$id] = $this->UnitConvertDecimals($this->GetValue($id), 0); //CoE überträgt Werte immer als Ganzzahl ohne Komma
+            $max = $min +3; //Analog immer 4 Werte pro Block
+        } else if ($type == 'D') { //Digitale Daten
+            $config = json_decode($this->ReadPropertyString('Digital'));
+            $block = 0; //Digital 1-16
+            $min = 1;
+            if (intval(substr($Ident, 1) > 16)) {
+                $block = 9; //Digital 17-32
+                $min = 17;
+            }
+            $max = $min +15; //Digital immer 16 Werte pro Block
+        }
+        $strBlock = "block $type$min-$type$max";
+
+        //Werte von IPS auslesen
+        $values = [];
+        $discarded = '';
+        $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
+        for ($i = $min; $i <= $max; $i++) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
+            $values["$type$i"]['Value'] = 0;
+            $values["$type$i"]['UnitID'] = 0;
+            $vID = @$this->GetIDForIdent("$type$i");
+            if ($config["$type$i"] > 2 && $vID !== false) { //Als Output definiert & vorhanden
+                $values["$type$i"]['Value'] = $this->GetValue("$type$i");
+                if ($type == 'A') { //Unit ist nur für Analoge Werte nötig
                     $var = IPS_GetVariable($vID);
                     if ($var['VariableCustomProfile'] == '') {
-                        $units[$id] = 0; //$var['VariableProfile']; //muss noch angepasst werden!
+                        $values["$type$i"]['UnitID'] = 0; //$var['VariableProfile']; //muss noch angepasst werden!
                     }
-                }  
-            }
-            $values[$Ident] = $Value; //Neuen Wert im Block setzen (oben wird noch der Alte ausgelesen)
-        } else if ($type == 'D') { //Digitale Daten des ganzen Blocks ermitteln
-            /*$c = json_decode($this->ReadPropertyString('Digital'));
-            if ($id > 16){
-                $block = 16;
-            }
-            for ($i = 1; $i <= 16; $i++){
-                $values[$i]['Value'] = 0;
-                $values[$i]['UnitID'] = 0;
-                $Ident = 'D' . strval($i + $block);
-                if ($c->Config > 2 && @$this->GetIDForIdent($Ident) !== false) { //Als Output definiert & vorhanden
-                    $values[$i]['Value'] = intval($this->GetValue($Ident));
-                }  
-            }*/
+                }
+            } else {
+                $discarded .= "$type$i, ";
+            } 
         }
+        $values[$Ident]['Value'] = floatval($Value); //Neuen Wert im Block setzen (oben wird noch der Alte ausgelesen)
+        if (strlen($discarded) > 0) {
+            $this->SendDebug("SEND DATA ($strBlock) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
+        }
+
+        //Daten versenden
+        $units = json_decode($this->GetBuffer('Units'));
+        $strValues = '';
+        $data = '';
+        foreach ($values as $id => $v) {
+            $strValues .= " | $id: " . $v['Value'] . $units[$v['UnitID']]->Suffix;
+            if ($type == 'A') {
+                //$data .= pack('s', $this->UnitConvertDecimals($v['Value'], 0)); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma
+                $values[$id]['Value'] = $this->UnitConvertDecimals($v['Value'], 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma
+            } 
+        }
+        if ($type == 'A') {
+            $data = pack('s4C4', ... array_column($values, 'Value'), ... array_column($values, 'UnitID')); //4x 16Bit Werte und 4x 8Bit UnitID
+        } 
+        if ($type == 'D') {
+            $data = strrev(implode('', array_column($values, 'Value'))); //Umgekehrte Bit-Folge der Werte (16Bit)
+            $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
+        }
+        $this->SendDebug("SEND DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
+        $this->SendDebug("SEND DATA ($strBlock) -> RAW", $data, 1);
+        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block) . $data); //Header hinzufügen
+        $this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}', "ClientIP" => $this->ReadPropertyString('RemoteIP'), "ClientPort" => 5441, "Buffer" => $data]));
 
         //Temporär
         $this->SetValue($Ident, $Value);
