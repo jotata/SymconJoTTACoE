@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   11.11.2021 19:03:02
+ * @Last Modified:   12.11.2021 11:48:53
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -42,22 +42,25 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyString('RemoteIP', ''); //IP der Remote-CMI
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
-        $this->RegisterPropertyString('Analog', '{}'); //Konfiguration Analoge Variablen
-        $this->RegisterPropertyString('Digital', '{}'); //Konfiguration Digitale Variablen
+        $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
+        $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
 
-        //Units einlesen
+        //Units einlesen und Profile verwalten
         $units = file_get_contents(__DIR__ . '/units.json');
-        $units = json_decode($units, true, 4);
+        $units = json_decode($units);
         if (json_last_error() !== JSON_ERROR_NONE) {//Fehler darf nur beim Entwickler auftreten (nach Anpassung der JSON-Daten). Wird daher direkt als echo ohne Übersetzung ausgegeben.
             echo 'Create - Error in JSON (' . json_last_error_msg() . '). Please check File-Content of ' . __DIR__ . '/units.json and run PHPUnit-Test \'testUnits\'';
             exit;
         }
         $aUnits = [];
         foreach ($units as $u) { //Idents und notwendige Parameter einlesen
-            $aUnits[$u['UnitID']] = $u;
-            unset($aUnits[$u['UnitID']]['UnitID']);
-            //Tests sind nicht nötig, da die unit.json mittels PHPUnit-Tests kontrolliert wird und die Daten somit stimmen sollten.
+            $aUnits[$u->UnitID] = $u;
+            if ($u->Name !== '') { //per Definition von Technische Alternative gibt es z.T. 'leere' UnitIDs
+                $name = self::PREFIX . '.' . $u->Name. '.' . $u->UnitID;
+                $this->MaintainProfile(['ProfileName' => $name, 'ProfileType' => VARIABLETYPE_FLOAT, 'Suffix' => $u->Suffix, 'Digits' => $u->Decimals]);
+            }
+            unset($aUnits[$u->UnitID]->UnitID);
         }
         $this->SetBuffer('Units', json_encode($aUnits));
     }
@@ -82,24 +85,26 @@ class JoTTACoE extends IPSModule {
         $this->SendDebug('Set ReceiveDataFilter to', $filter . '.*', 0);
         $this->SetReceiveDataFilter($filter . '.*');
 
-        //Analoge Instanz-Variablen pflegen
-        $x = json_decode($this->ReadPropertyString('Analog'));
-        foreach ($x as $c){
-            $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, ($c->Config > 0));
-            if ($c->Config > 2){ //Output oder Input/Output
-                $this->EnableAction($c->Ident);
-            } else if ($c->Config > 0) { //Nur wenn Variable vorhanden ist
-                $this->DisableAction($c->Ident);
+        if ($this->GetStatus() !== IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
+            //Analoge Instanz-Variablen pflegen
+            $x = json_decode($this->ReadPropertyString('Analog'));
+            foreach ($x as $c) {
+                $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, ($c->Config > 0));
+                if ($c->Config > 2) { //Output oder Input/Output
+                    $this->EnableAction($c->Ident);
+                } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
+                    $this->DisableAction($c->Ident);
+                }
             }
-        }
-        //Digitale Instanz-Variablen pflegen
-        $x = json_decode($this->ReadPropertyString('Digital'));
-        foreach ($x as $c){
-            $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, ($c->Config > 0));
-            if ($c->Config > 2){ //Output oder Input/Output
-                $this->EnableAction($c->Ident);
-            } else if ($c->Config > 0) { //Nur wenn Variable vorhanden ist
-                $this->DisableAction($c->Ident);
+            //Digitale Instanz-Variablen pflegen
+            $x = json_decode($this->ReadPropertyString('Digital'));
+            foreach ($x as $c) {
+                $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, ($c->Config > 0));
+                if ($c->Config > 2) { //Output oder Input/Output
+                    $this->EnableAction($c->Ident);
+                } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
+                    $this->DisableAction($c->Ident);
+                }
             }
         }
     }
@@ -340,7 +345,7 @@ class JoTTACoE extends IPSModule {
      * @param int $ToDecimals Anzahl Nachkommastellen für den Output
      * @return float konvertierter Wert
      */
-    function UnitConvertDecimals($Value, int $ToDecimals) {
+    private function UnitConvertDecimals($Value, int $ToDecimals) {
         $val = str_replace('.', '', strval($Value));
         if ($ToDecimals !== 0) {
             $low = substr($val, -$ToDecimals);
