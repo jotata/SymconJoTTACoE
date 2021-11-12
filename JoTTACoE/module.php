@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   12.11.2021 11:48:53
+ * @Last Modified:   12.11.2021 16:56:17
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -46,20 +46,22 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
 
-        //Units einlesen und Profile verwalten
+        //Units einlesen und analoge Profile verwalten
         $units = file_get_contents(__DIR__ . '/units.json');
         $units = json_decode($units);
         if (json_last_error() !== JSON_ERROR_NONE) {//Fehler darf nur beim Entwickler auftreten (nach Anpassung der JSON-Daten). Wird daher direkt als echo ohne Übersetzung ausgegeben.
             echo 'Create - Error in JSON (' . json_last_error_msg() . '). Please check File-Content of ' . __DIR__ . '/units.json and run PHPUnit-Test \'testUnits\'';
             exit;
         }
-        $aUnits = [];
-        foreach ($units as $u) { //Idents und notwendige Parameter einlesen
+        $aUnits[-1] = (object)['Name' => 'Digital', 'ProfileName' => '~Switch', 'Suffix' => '', 'Decimals' => 0]; //Unit für Digitale In-/Outputs
+        foreach ($units as $u) {
             $aUnits[$u->UnitID] = $u;
+            $pName = '';
             if ($u->Name !== '') { //per Definition von Technische Alternative gibt es z.T. 'leere' UnitIDs
-                $name = self::PREFIX . '.' . $u->Name. '.' . $u->UnitID;
-                $this->MaintainProfile(['ProfileName' => $name, 'ProfileType' => VARIABLETYPE_FLOAT, 'Suffix' => $u->Suffix, 'Digits' => $u->Decimals]);
+                $pName = self::PREFIX . '.' . $u->Name. '.' . $u->UnitID;
+                $this->MaintainProfile(['ProfileName' => $pName, 'ProfileType' => VARIABLETYPE_FLOAT, 'Suffix' => $u->Suffix, 'Digits' => $u->Decimals]);
             }
+            $aUnits[$u->UnitID]->ProfileName = $pName;
             unset($aUnits[$u->UnitID]->UnitID);
         }
         $this->SetBuffer('Units', json_encode($aUnits));
@@ -86,10 +88,11 @@ class JoTTACoE extends IPSModule {
         $this->SetReceiveDataFilter($filter . '.*');
 
         if ($this->GetStatus() !== IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
+            $units = json_decode($this->GetBuffer('Units'));
             //Analoge Instanz-Variablen pflegen
             $x = json_decode($this->ReadPropertyString('Analog'));
             foreach ($x as $c) {
-                $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, '', $c->ID, ($c->Config > 0));
+                $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, $units->{0}->ProfileName, $c->ID, ($c->Config > 0));
                 if ($c->Config > 2) { //Output oder Input/Output
                     $this->EnableAction($c->Ident);
                 } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
@@ -99,7 +102,7 @@ class JoTTACoE extends IPSModule {
             //Digitale Instanz-Variablen pflegen
             $x = json_decode($this->ReadPropertyString('Digital'));
             foreach ($x as $c) {
-                $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, '', $c->ID + 32, ($c->Config > 0));
+                $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, $units->{-1}->ProfileName, $c->ID + 32, ($c->Config > 0));
                 if ($c->Config > 2) { //Output oder Input/Output
                     $this->EnableAction($c->Ident);
                 } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
@@ -188,6 +191,7 @@ class JoTTACoE extends IPSModule {
         $units = json_decode($this->GetBuffer('Units'));
         $values = [];
         if ($header['Block'] == 0 || $header['Block'] == 9) { //Digitale Daten
+            $type = 'D';
             if ($header['Block'] == 0) {
                 $block = 1;
             } else {
@@ -204,9 +208,10 @@ class JoTTACoE extends IPSModule {
                 $bit = substr($buffer, $i, 1);
                 $ident = 'D' . ($block+$i);
                 $values[$ident]['Value'] = $bit;
-                $values[$ident]['Suffix'] = '';
+                $values[$ident]['UnitID'] = -1;
             }
         } else if ($header['Block'] > 0 && $header['Block'] < 9) { //Analoge Daten
+            $type = 'A';
             $block = (($header['Block'] -1) * 4 +1);
             $strBlock = 'block A' . $block . '-A' . ($block + 3); 
             $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
@@ -215,8 +220,8 @@ class JoTTACoE extends IPSModule {
                 $val = $x['Value' . ($i+1)];
                 $unitID = $x['UnitID' . ($i+1)];
                 $ident = 'A' . ($block+$i);
-                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, $units[$unitID]->Decimals);
-                $values[$ident]['Suffix'] = $units[$unitID]->Suffix;
+                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, $units->$unitID->Decimals);
+                $values[$ident]['UnitID'] = $unitID;
             }
             
         } else { //Ungültige Daten
@@ -230,11 +235,15 @@ class JoTTACoE extends IPSModule {
         $config = array_merge(json_decode($this->ReadPropertyString('Analog')), json_decode($this->ReadPropertyString('Digital')));
         $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
         foreach ($values as $ident => $value){
-            $strValues .= " | $ident: " . $value['Value'] . $value['Suffix'];
-            if (@$this->GetIDForIdent($ident) === false || $config[$ident] !== 2 && $config[$ident] !== 4) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
+            $strValues .= " | $ident: " . $value['Value'] . $units->{$value['UnitID']}->Suffix;
+            $vID = @$this->GetIDForIdent($ident);
+            if ($vID === false || $config[$ident] !== 2 && $config[$ident] !== 4) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
                 $discarded .= ", $ident";
-            } else {
+            } else { //Variable aktualisieren
                 $this->SetValue($ident, $value['Value']);
+                if ($type === 'A') { //Bei analogen Werten das Profil, gemäss der vom CMI übermittelten UnitID, anpassen
+                    $this->MaintainVariable($ident, '', VARIABLETYPE_FLOAT, $units->{$value['UnitID']}->ProfileName, 0, true); //Es wird nur das Profil angepasst
+                }
             }
         }
         $this->SendDebug("RECEIVE DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
@@ -286,7 +295,7 @@ class JoTTACoE extends IPSModule {
             $v = 0;
             $u = 0;
             $vID = @$this->GetIDForIdent("$type$i");
-            if ($config["$type$i"] > 2 && $vID !== false) { //Als Output definiert & vorhanden
+            if ($config["$type$i"] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
                 if ("$type$i" == $Ident) { //neuen Wert übernehmen
                     $v = $Value;
                 } else { //Wert von IPS-Variable auslesen
@@ -294,14 +303,16 @@ class JoTTACoE extends IPSModule {
                 }
                 if ($type == 'A') { //Unit ist nur für Analoge Werte nötig
                     $var = IPS_GetVariable($vID);
-                    if ($var['VariableCustomProfile'] == '') {
-                        $u = 0; //$var['VariableProfile']; //muss noch angepasst werden!
+                    $pName = $var['VariableProfile'];
+                    if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX .'.') === 0) { //CustomProfile entspricht einem Modul-Profil
+                        $pName = $var['VariableCustomProfile'];
                     }
+                    $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
                 }
-            } else {
+            } else { // nicht als Output definiert oder IPS-Variable nicht vorhanden
                 $discarded .= "$type$i, ";
             }
-            $strValues .= " | $type$i: " . $v . $units[$u]->Suffix;
+            $strValues .= " | $type$i: " . $v . $units->{$u}->Suffix;
             $values["$type$i"]['Value'] = $this->UnitConvertDecimals($v, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
             $values["$type$i"]['UnitID'] = $u;
         }
