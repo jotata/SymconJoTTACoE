@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   12.11.2021 16:56:17
+ * @Last Modified:   12.11.2021 19:29:35
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -220,7 +220,7 @@ class JoTTACoE extends IPSModule {
                 $val = $x['Value' . ($i+1)];
                 $unitID = $x['UnitID' . ($i+1)];
                 $ident = 'A' . ($block+$i);
-                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, $units->$unitID->Decimals);
+                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, 0, $units->$unitID->Decimals);
                 $values[$ident]['UnitID'] = $unitID;
             }
             
@@ -313,7 +313,7 @@ class JoTTACoE extends IPSModule {
                 $discarded .= "$type$i, ";
             }
             $strValues .= " | $type$i: " . $v . $units->{$u}->Suffix;
-            $values["$type$i"]['Value'] = $this->UnitConvertDecimals($v, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
+            $values["$type$i"]['Value'] = $this->UnitConvertDecimals($v, $units->{$u}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
             $values["$type$i"]['UnitID'] = $u;
         }
         if (strlen($discarded) > 0) {
@@ -353,15 +353,21 @@ class JoTTACoE extends IPSModule {
      * Werte werden im CoE immer als ganze Zahlen mit Angabe der UnitID übertragen.
      * Über die UnitID sind die Kommastellen für den Wert und die Einheit definiert.
      * @param mixed $Value Wert zum konvertieren
+     * @param int $FromDecimals Anzahl Nachkommastellen für den Input
      * @param int $ToDecimals Anzahl Nachkommastellen für den Output
      * @return float konvertierter Wert
      */
-    private function UnitConvertDecimals($Value, int $ToDecimals) {
-        $val = str_replace('.', '', strval($Value));
-        if ($ToDecimals !== 0) {
+    private function UnitConvertDecimals($Value, int $FromDecimals, int $ToDecimals) {
+        if ($FromDecimals <> 0 && $ToDecimals <> 0) {//Fehler darf nur beim Entwickler auftreten. Wird daher direkt als echo ohne Übersetzung ausgegeben.
+            echo 'UnitConvertDecimals - One of both decimals has to be 0!';
+            exit;
+        }
+        $val = number_format(floatval($Value), $FromDecimals, '.', '');//Sicherstellen, dass die angegebene Anzahl Nachkommastellen vorhanden ist (abschneiden/hinzufügen)
+        $val = str_replace('.', '', $val); //Komma entfernen
+        if ($ToDecimals !== 0) { //Komma auf $ToDecimals schieben
+            $hi = substr($val, 0, strlen($val) - $ToDecimals);
             $low = substr($val, -$ToDecimals);
-            $high = substr($val, 0, (strlen($val) - $ToDecimals));
-            $val = "$high.$low";
+            $val = "$hi.$low";
         }
         return floatval($val);
     }
