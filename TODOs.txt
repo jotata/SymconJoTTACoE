@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   09.11.2021 22:17:43
+ * @Last Modified:   12.11.2021 17:07:09
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -56,12 +56,14 @@ Integration IPS:
 
 TODO:
 x ReceiveData: Analoge Werte mit UnitID berechnen
-- ReceiveData: Werte unter berücksichtigung der neuen Konfiguration speichern
+x ReceiveData: Werte unter berücksichtigung der neuen Konfiguration speichern
 x KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können.
-- SendData: ganze Funktionalität
-- Automatische Übernahme der Einheit (Profil)
-- PHPUnit-Test 'testUnits' für units.json
+x SendData: ganze Funktionalität
+x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer noch mit Custom-Profil überschreiben
+- Schalter für Hard/Soft Write bei Input/Output
+- PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
 - Cache via Script verfügbar machen (nur lesend)?
+- Funktion zum senden eines beliebigen Wertes?
 - Doku
 
 FEATURES & FIXES V1.0
