@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            JoTTACoE_Test.php
  * @Create Date:     13.11.2021 15:45:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   13.11.2021 17:57:45
+ * @Last Modified:   13.11.2021 18:06:18
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -49,7 +49,7 @@ class JoTTACoE_Test extends TestCase {
     //Testet das Format der ModBusConfig.json
     public function testUnits() {
         $file = __DIR__ . '/../JoTTACoE/units.json';
-        
+
         //Check JSON Syntax Errors
         $json = file_get_contents($file);
         $config = json_decode($json);
