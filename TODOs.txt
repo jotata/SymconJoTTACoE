@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   12.11.2021 17:07:09
+ * @Last Modified:   13.11.2021 18:09:33
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -49,19 +49,14 @@ Digitale Pakete CoE (erkennbar am Block aus Byte 2):
 - Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1)
 - Byte 5-14 = nicht genutzt (aber anscheinend mit 0 aufgefüllt)
 
-Integration IPS:
-- hört grundsätzlich auf alle Sender & NetzwerkAusgänge (?) Könnte pro Instanz auch nur auf einen Sender hören (?)
-- Erstellt Variablen mit Sender & NetzwerkAusgang für Empfang/Senden oder beides => eine Instanz kann Werte von verschiedenen Sendern empfangen und mit der eigenen KnotenNr versenden
-- sicherstellen, dass jeweils nur eine Instanz mit derlseben KnotenNr existiert
-
 TODO:
 x ReceiveData: Analoge Werte mit UnitID berechnen
 x ReceiveData: Werte unter berücksichtigung der neuen Konfiguration speichern
 x KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können.
 x SendData: ganze Funktionalität
 x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer noch mit Custom-Profil überschreiben
-- Schalter für Hard/Soft Write bei Input/Output
-- PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
+x PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
+- Update ReadMe
 - Cache via Script verfügbar machen (nur lesend)?
 - Funktion zum senden eines beliebigen Wertes?
 - Doku
@@ -69,6 +64,7 @@ x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer 
 FEATURES & FIXES V1.0
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
   Alternativ prüfen, was TA hier vorschlägt...
+- PHPUnit-Test SendData & ReceiveData
 
 FEATURES & FIXES V??
 - Integration Tests
