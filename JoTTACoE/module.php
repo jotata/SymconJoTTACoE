@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   13.11.2021 17:42:21
+ * @Last Modified:   13.11.2021 17:48:04
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -53,12 +53,12 @@ class JoTTACoE extends IPSModule {
             echo 'Create - Error in JSON (' . json_last_error_msg() . '). Please check File-Content of ' . __DIR__ . '/units.json and run PHPUnit-Test \'testUnits\'';
             exit;
         }
-        $aUnits[-1] = (object)['Name' => 'Digital', 'ProfileName' => '~Switch', 'Suffix' => '', 'Decimals' => 0]; //Unit für Digitale In-/Outputs
+        $aUnits[-1] = (object) ['Name' => 'Digital', 'ProfileName' => '~Switch', 'Suffix' => '', 'Decimals' => 0]; //Unit für Digitale In-/Outputs
         foreach ($units as $u) {
             $aUnits[$u->UnitID] = $u;
             $pName = '';
             if ($u->Name !== '') { //per Definition von Technische Alternative gibt es z.T. 'leere' UnitIDs
-                $pName = self::PREFIX . '.' . $u->Name. '.' . $u->UnitID;
+                $pName = self::PREFIX . '.' . $u->Name . '.' . $u->UnitID;
                 $this->MaintainProfile(['ProfileName' => $pName, 'ProfileType' => VARIABLETYPE_FLOAT, 'Suffix' => $u->Suffix, 'Digits' => $u->Decimals]);
             }
             $aUnits[$u->UnitID]->ProfileName = $pName;
@@ -74,13 +74,13 @@ class JoTTACoE extends IPSModule {
      */
     public function ApplyChanges() {
         parent::ApplyChanges();
-        
+
         //ReceiveDataFilter anpassen
         $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr'))), '"'); //RemoteNodeNr JSON-Codiert
         if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
             $filter = 'DEAKTIVIERT';
         } else { //Empfang aktiviert
-            $remoteIP =  $this->ReadPropertyString('RemoteIP');
+            $remoteIP = $this->ReadPropertyString('RemoteIP');
             $filter = '.*' . preg_quote(',"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
             $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss Host-IP aus dem UDP-Socket entsprechen
         }
@@ -152,7 +152,6 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data) {
-        
     }
 
     /**
@@ -163,32 +162,32 @@ class JoTTACoE extends IPSModule {
      */
     public function ReceiveData($JSONString) {
         $this->SendDebug('RECEIVE DATA -> JSONString', $JSONString, 0);
-		$data = json_decode($JSONString);
+        $data = json_decode($JSONString);
         $buffer = utf8_decode($data->Buffer);
         $header = unpack('CNodeNr/CBlock', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
         $buffer = substr($buffer, 2); //Header entfernen
-        
-        /** Daten im Buffer sind wie folgt aufgebaut:
-        * Analoge Pakete CoE (erkennbar am Block aus Byte 2): 
-        * - Byte 1 = SenderKnoten
-        * - Byte 2 = Block (1-8) => (1=A1-A4, 2=A5-A8, 3=A9-A12, 4=A13-A16, 5=A17-A20, 6=A21-A24, 7=A25-A28, 8=A29-A32) => es werden immer 4 NetzwerkAusgänge pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
-        * - Byte 3+4 = Wert 1 (unsigned Short)
-        * - Byte 5+6 = Wert 2 (unsigned Short)
-        * - Byte 7+8 = Wert 3 (unsigned Short)
-        * - Byte 9+10 = Wert 4 (unsigned Short)
-        * - Byte 11 = Einheit/Datentyp Wert 1
-        * - Byte 12 = Einheit/Datentyp Wert 2
-        * - Byte 13 = Einheit/Datentyp Wert 3
-        * - Byte 14 = Einheit/Datentyp Wert 4
-        *
-        * Digitale Pakete CoE (erkennbar am Block aus Byte 2): 
-        * - Byte 1 = SenderKnoten
-        * - Byte 2 = Block (0,9) => (0=A1-A16, 9=A17-A32) => es werden immer 16 Bit (16 Ausgänge) pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet 
-        * - Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1)
-        * - Byte 5-14 = nicht genutzt (aber anscheinend mit 0 aufgefüllt)
-        */
 
-        //Daten verarbeiten 
+        /** Daten im Buffer sind wie folgt aufgebaut:
+         * Analoge Pakete CoE (erkennbar am Block aus Byte 2):
+         * - Byte 1 = SenderKnoten
+         * - Byte 2 = Block (1-8) => (1=A1-A4, 2=A5-A8, 3=A9-A12, 4=A13-A16, 5=A17-A20, 6=A21-A24, 7=A25-A28, 8=A29-A32) => es werden immer 4 NetzwerkAusgänge pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
+         * - Byte 3+4 = Wert 1 (unsigned Short)
+         * - Byte 5+6 = Wert 2 (unsigned Short)
+         * - Byte 7+8 = Wert 3 (unsigned Short)
+         * - Byte 9+10 = Wert 4 (unsigned Short)
+         * - Byte 11 = Einheit/Datentyp Wert 1
+         * - Byte 12 = Einheit/Datentyp Wert 2
+         * - Byte 13 = Einheit/Datentyp Wert 3
+         * - Byte 14 = Einheit/Datentyp Wert 4
+         *
+         * Digitale Pakete CoE (erkennbar am Block aus Byte 2):
+         * - Byte 1 = SenderKnoten
+         * - Byte 2 = Block (0,9) => (0=A1-A16, 9=A17-A32) => es werden immer 16 Bit (16 Ausgänge) pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
+         * - Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1)
+         * - Byte 5-14 = nicht genutzt (aber anscheinend mit 0 aufgefüllt)
+         */
+
+        //Daten verarbeiten
         $units = json_decode($this->GetBuffer('Units'));
         $values = [];
         if ($header['Block'] == 0 || $header['Block'] == 9) { //Digitale Daten
@@ -207,24 +206,23 @@ class JoTTACoE extends IPSModule {
             $this->SendDebug("RECEIVE DATA ($strBlock) -> Bits", $bin, 0);
             for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
-                $ident = 'D' . ($block+$i);
+                $ident = 'D' . ($block + $i);
                 $values[$ident]['Value'] = $bit;
                 $values[$ident]['UnitID'] = -1;
             }
-        } else if ($header['Block'] > 0 && $header['Block'] < 9) { //Analoge Daten
+        } elseif ($header['Block'] > 0 && $header['Block'] < 9) { //Analoge Daten
             $type = 'A';
-            $block = (($header['Block'] -1) * 4 +1);
-            $strBlock = 'block A' . $block . '-A' . ($block + 3); 
+            $block = (($header['Block'] - 1) * 4 + 1);
+            $strBlock = 'block A' . $block . '-A' . ($block + 3);
             $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
             $x = unpack('s4Value/C4UnitID', $buffer);
             for ($i = 0; $i < 4; $i++) { //Werte berechnen und den entsprechenden Values zuweisen
-                $val = $x['Value' . ($i+1)];
-                $unitID = $x['UnitID' . ($i+1)];
-                $ident = 'A' . ($block+$i);
+                $val = $x['Value' . ($i + 1)];
+                $unitID = $x['UnitID' . ($i + 1)];
+                $ident = 'A' . ($block + $i);
                 $values[$ident]['Value'] = $this->UnitConvertDecimals($val, 0, $units->{$unitID}->Decimals);
                 $values[$ident]['UnitID'] = $unitID;
             }
-            
         } else { //Ungültige Daten
             $this->ThrowMessage('Unknown data header (block): ' . $header['Block'] . ' - Skipping');
             return;
@@ -235,7 +233,7 @@ class JoTTACoE extends IPSModule {
         $discarded = '';
         $config = array_merge(json_decode($this->ReadPropertyString('Analog')), json_decode($this->ReadPropertyString('Digital')));
         $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
-        foreach ($values as $ident => $value){
+        foreach ($values as $ident => $value) {
             $strValues .= " | $ident: " . $value['Value'] . $units->{$value['UnitID']}->Suffix;
             $vID = @$this->GetIDForIdent($ident);
             if ($vID === false || $config[$ident] !== 2 && $config[$ident] !== 4) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
@@ -251,7 +249,11 @@ class JoTTACoE extends IPSModule {
         if (strlen($discarded) > 0) {
             $this->SendDebug("RECEIVE DATA ($strBlock) -> Skipped", 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
         }
-	}
+    }
+
+    public function Send(string $Text, string $ClientIP, int $ClientPort) {
+        $this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}', 'ClientIP' => $ClientIP, 'ClientPort' => $ClientPort, 'Buffer' => $Text]));
+    }
 
     /**
      * Wird von IPS-Instanz Funktion PREFIX_RequestAction aufgerufen
@@ -272,9 +274,9 @@ class JoTTACoE extends IPSModule {
         if ($type == 'A') { //Analoge Daten
             $config = json_decode($this->ReadPropertyString('Analog'));
             $block = ceil(intval(substr($Ident, 1)) / 4); //BlockNr (1-8) berechnen
-            $min = (($block -1) * 4 +1); //Erste ID des Blocks berechnen
-            $max = $min +3; //Analog immer 4 Werte pro Block
-        } else if ($type == 'D') { //Digitale Daten
+            $min = (($block - 1) * 4 + 1); //Erste ID des Blocks berechnen
+            $max = $min + 3; //Analog immer 4 Werte pro Block
+        } elseif ($type == 'D') { //Digitale Daten
             $config = json_decode($this->ReadPropertyString('Digital'));
             $block = 0; //Digital 1-16
             $min = 1;
@@ -282,7 +284,7 @@ class JoTTACoE extends IPSModule {
                 $block = 9; //Digital 17-32
                 $min = 17;
             }
-            $max = $min +15; //Digital immer 16 Werte pro Block
+            $max = $min + 15; //Digital immer 16 Werte pro Block
         }
         $strBlock = "block $type$min-$type$max";
 
@@ -305,7 +307,7 @@ class JoTTACoE extends IPSModule {
                 if ($type == 'A') { //Unit ist nur für Analoge Werte nötig
                     $var = IPS_GetVariable($vID);
                     $pName = $var['VariableProfile'];
-                    if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX .'.') === 0) { //CustomProfile entspricht einem Modul-Profil
+                    if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX . '.') === 0) { //CustomProfile entspricht einem Modul-Profil
                         $pName = $var['VariableCustomProfile'];
                     }
                     $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
@@ -325,15 +327,15 @@ class JoTTACoE extends IPSModule {
         //Daten senden
         $data = '';
         if ($type == 'A') { //Analoge Daten
-            $data = pack('s4C4', ... array_column($values, 'Value'), ... array_column($values, 'UnitID')); //4x 16Bit Werte und 4x 8Bit UnitID
-        } 
+            $data = pack('s4C4', ...array_column($values, 'Value'), ...array_column($values, 'UnitID')); //4x 16Bit Werte und 4x 8Bit UnitID
+        }
         if ($type == 'D') { //Digitale Daten
             $data = strrev(implode('', array_column($values, 'Value'))); //Umgekehrte Bit-Folge der Werte (16Bit)
             $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
         }
         $this->SendDebug("SEND DATA ($strBlock) -> RAW", $data, 1);
         $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
-        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, "ClientIP" => $this->ReadPropertyString('RemoteIP'), "ClientPort" => 5441, "Buffer" => $data]);
+        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
         $this->SendDebug('SEND DATA -> JSONString', $data, 0);
         $response = @$this->SendDataToParent($data);
 
@@ -351,7 +353,7 @@ class JoTTACoE extends IPSModule {
         return false;
     }
 
-    /** 
+    /**
      * Verschiebt das Komma in $Value auf $ToDecimals Kommastellen
      * Werte werden im CoE immer als ganze Zahlen mit Angabe der UnitID übertragen.
      * Über die UnitID sind die Kommastellen für den Wert und die Einheit definiert.
@@ -361,11 +363,11 @@ class JoTTACoE extends IPSModule {
      * @return float konvertierter Wert
      */
     private function UnitConvertDecimals($Value, int $FromDecimals, int $ToDecimals) {
-        if ($FromDecimals <> 0 && $ToDecimals <> 0) {//Fehler darf nur beim Entwickler auftreten. Wird daher direkt als echo ohne Übersetzung ausgegeben.
+        if ($FromDecimals != 0 && $ToDecimals != 0) { //Fehler darf nur beim Entwickler auftreten. Wird daher direkt als echo ohne Übersetzung ausgegeben.
             echo 'UnitConvertDecimals - One of both decimals has to be 0!';
             exit;
         }
-        $val = number_format(floatval($Value), $FromDecimals, '.', '');//Sicherstellen, dass die angegebene Anzahl Nachkommastellen vorhanden ist (abschneiden/hinzufügen)
+        $val = number_format(floatval($Value), $FromDecimals, '.', ''); //Sicherstellen, dass die angegebene Anzahl Nachkommastellen vorhanden ist (abschneiden/hinzufügen)
         $val = str_replace('.', '', $val); //Komma entfernen
         if ($ToDecimals !== 0) { //Komma auf $ToDecimals schieben
             $hi = substr($val, 0, strlen($val) - $ToDecimals);
@@ -374,8 +376,4 @@ class JoTTACoE extends IPSModule {
         }
         return floatval($val);
     }
-
-    public function Send(string $Text, string $ClientIP, int $ClientPort) {
-		$this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}', "ClientIP" => $ClientIP, "ClientPort" => $ClientPort, "Buffer" => $Text]));
-	}
 }
