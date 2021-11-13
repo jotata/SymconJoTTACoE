@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   12.11.2021 19:29:35
+ * @Last Modified:   13.11.2021 17:42:21
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -162,6 +162,7 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function ReceiveData($JSONString) {
+        $this->SendDebug('RECEIVE DATA -> JSONString', $JSONString, 0);
 		$data = json_decode($JSONString);
         $buffer = utf8_decode($data->Buffer);
         $header = unpack('CNodeNr/CBlock', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
@@ -220,7 +221,7 @@ class JoTTACoE extends IPSModule {
                 $val = $x['Value' . ($i+1)];
                 $unitID = $x['UnitID' . ($i+1)];
                 $ident = 'A' . ($block+$i);
-                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, 0, $units->$unitID->Decimals);
+                $values[$ident]['Value'] = $this->UnitConvertDecimals($val, 0, $units->{$unitID}->Decimals);
                 $values[$ident]['UnitID'] = $unitID;
             }
             
@@ -332,7 +333,9 @@ class JoTTACoE extends IPSModule {
         }
         $this->SendDebug("SEND DATA ($strBlock) -> RAW", $data, 1);
         $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
-        $response = @$this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, "ClientIP" => $this->ReadPropertyString('RemoteIP'), "ClientPort" => 5441, "Buffer" => $data]));
+        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, "ClientIP" => $this->ReadPropertyString('RemoteIP'), "ClientPort" => 5441, "Buffer" => $data]);
+        $this->SendDebug('SEND DATA -> JSONString', $data, 0);
+        $response = @$this->SendDataToParent($data);
 
         //Antwort UDP-Socket auswerten
         if ($response !== false) { //kein Fehler seitens IPS
