@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            JoTTACoE_Test.php
  * @Create Date:     13.11.2021 15:45:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   13.11.2021 17:30:15
+ * @Last Modified:   13.11.2021 17:57:45
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -59,7 +59,7 @@ class JoTTACoE_Test extends TestCase {
         if (json_last_error() === JSON_ERROR_NONE) {
             $this->assertGreaterThanOrEqual(1, count($config), "$file does not contain definitions.");
             foreach ($config as $c) {
-                if (array_key_exists('UnitID', $c)) {
+                if (property_exists($c, 'UnitID')) {
                     $a = 'UNITID: ' . $c->UnitID . ' - ';
                     $this->assertIsInt($c->UnitID, $a . 'Wrong definition of \'UnitID\'.');
                     $this->assertGreaterThanOrEqual(0, $c->UnitID, $a . '\'UnitID\' has to be >= 0.');
@@ -69,7 +69,7 @@ class JoTTACoE_Test extends TestCase {
                     $this->assertIsInt($c->Decimals, $a . 'Wrong definition of \'Decimals\'.');
                     $this->assertGreaterThanOrEqual(0, $c->Decimals, $a . '\'Decimals\' has to be >= 0.');
                 } else {
-                    $this->assertArrayHasKey('UnitID', $c, 'Definition does not contain \'UnitID\'.');
+                    $this->assertTrue(false, 'Definition does not contain \'UnitID\'.');
                 }
             }
 
