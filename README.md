@@ -119,16 +119,16 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 ## 6. Anhang
   ### 1. CoE-Datenblöcke
   CAN over Ethernet (CoE) versendet immer mehrere Werte als Datenblöcke per UDP auf Port 5441. Bei analogen Daten werden jeweils 4 Werte, bei digitalen Daten 16 Werte gleichzeitig miteinander versendet (auch wenn diese nicht definiert oder geändert wurden).
-  Jedes CoE-Paket besteht aus 14 Bytes. Dier ersten zwei Bytes sind für den Header reserviert und beinhalten die Konten-Nr des Absenders sowie die Block-Nr der Daten. Die restlichen 12 Daten-Bytes enthalten die entsprechenden Werte und die Messgrösse als UnitID.
+  Jedes CoE-Paket besteht aus 14 Bytes. Die ersten zwei Bytes sind für den Header reserviert und beinhalten die Konten-Nr des Absenders sowie die Block-Nr der Daten. Die restlichen 12 Daten-Bytes enthalten die entsprechenden Werte und die Messgrösse als UnitID.
 
-  Analoge Daten:
+  **Analoge Daten**
   | **Byte:**  | 1         | 2        | 3+4    | 5+6    | 7+8    | 9+10   | 11       | 12       | 13       | 14       |
   | :--------- | :-------: | :------: | :----: | :----: | :----: | :----: | :------: | :------: | :------: | :------: |
   | **Daten:** | Knoten-Nr | Block-Nr | Wert 1 | Wert 2 | Wert 3 | Wert 4 | UnitID 1 | UnitID 2 | UnitID 3 | UnitID 4 |
   
-  Die Werte werden immer dimensionslos als Signed Short (16-Bit Integer von -32768 bis +32767) als BigEndian übertragen. Anschliessend bestimmt die UnitID (Messgrösse), um wieviele Stellen das Komma nach links geschoben wird um den effektiven Wert mit Nachkommastellen und die Einheit zu erhalten.
+  Die Werte werden immer dimensionslos als Signed Short (16-Bit Integer von -32768 bis +32767) BigEndian übertragen. Anschliessend bestimmt die UnitID (Messgrösse), um wieviele Stellen das Komma nach links geschoben wird um den effektiven Wert mit Nachkommastellen und die Einheit zu erhalten.
 
-  Digitale Daten:
+  **Digitale Daten**
   | **Byte:**  | 1         | 2        | 3+4        | 5-10             | 11              | 12-14            |
   | :--------- | :-------: | :------: | :--------: | :--------------: | :-------------: | :--------------: |
   | **Daten:** | Knoten-Nr | Block-Nr | Wert 1-16  | mit 0 aufgefüllt | Messgrösse ???  | mit 0 aufgefüllt |
@@ -136,6 +136,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Im ersten 16-Bit langen Wert-Block entspricht jedes Bit dem Zustand eines digitalen Ausgangs. Die restlichen 6 Wert-Bytes werden mit 0 aufgefüllt. Im ersten Messgrössen-Byte wird zwar etwas übertragen, aber bisher konnte ich noch nicht herausfinden was genau.
   Vermutlich wird zwischen zwei digitalen Einheiten (0 = Ein/Aus oder 1 = Nein/Ja) unterschieden. 
 
+  **Datenblöcke**
   Die einzelnen Netzwerkausgänge sind fixen Datenblöcken zugewiesen. Die Block-Nr teilt dem Empfänger mit, dass er jetzt die folgenden Werte übermittelt bekommt:
   | Block-Nr | Datentyp | Netzwerkausgänge |
   | :------: | :------- |:---------------- |
@@ -153,6 +154,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Nicht definierte Werte eines Blockes werden immer als 0-Wert gesendet. Daher ist es wichtig, dass bei mehreren CMIs darauf geachtet wird, dass diese entweder eine andere Knoten-Nr oder einen Netzwerkausgang aus einem anderen Block für den CoE-Ausgang verwenden.
   Wird dies nicht beachtet, überscheiben die beiden CMIs die entsprechenden Werte jeweis gegenseitig.
 
+  **Sendebedingungen**
   Da immer der ganze Block mit den aktuellsten Werten gesendet wird, kann es sein, dass neue Werte in IPS ankommen, obwohl die Sendebedingung für einen bestimmten Wert auf der CMI gar nicht erfüllt war.
   Ist die Sendebedingung für einen beliebigen Wert aus demselben Block erfüllt ist somit die Sendebedingung für alle Werte innerhalb desselben Blockes erfüllt.
 
