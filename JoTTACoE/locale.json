@@ -12,9 +12,11 @@
             "Own Node Number": "Eigene Knoten-Nr",
             "Analog variables": "Analoge Variablen",
             "Digital variables": "Digitale Variablen",
-            "Read": "Lesen",
-            "Write": "Schreiben",
-            "CoE Profile": "CoE-Profil"
+            "disabled": "Deaktiviert",
+            "enabled": "Aktiviert",
+            "input": "Eingang",
+            "output": "Ausgang",
+            "input / output": "Eingang / Ausgang"
         }
     }
 }
