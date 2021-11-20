@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   13.11.2021 18:09:33
+ * @Last Modified:   20.11.2021 14:19:33
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -56,15 +56,14 @@ x KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können.
 x SendData: ganze Funktionalität
 x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer noch mit Custom-Profil überschreiben
 x PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
-- Update ReadMe
-- Cache via Script verfügbar machen (nur lesend)?
-- Funktion zum senden eines beliebigen Wertes?
+x Update ReadMe / Doku
 - Doku
 
 FEATURES & FIXES V1.0
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
   Alternativ prüfen, was TA hier vorschlägt...
 - PHPUnit-Test SendData & ReceiveData
+- Funktion zum senden eines beliebigen Wertes?
 
 FEATURES & FIXES V??
-- Integration Tests
+- Integration weitere Tests
