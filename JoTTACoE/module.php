@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   13.11.2021 17:48:04
+ * @Last Modified:   20.11.2021 12:50:37
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -197,7 +197,7 @@ class JoTTACoE extends IPSModule {
             } else {
                 $block = 17;
             }
-            $strBlock = 'block D' . $block . '-D' . ($block + 16);
+            $strBlock = 'block D' . $block . '-D' . ($block + 15);
             $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
             $hex = unpack('H2', $buffer); //nur Byte 3+4 enthalten digitale Daten
             $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
