@@ -41,7 +41,7 @@ Es ist auch möglich, das Modul in Kombination mit dem in IPS integrierten Modul
  - Zum Senden via CoE müssen die entsprechenden CAN-Eingänge auf dem Endgerät konfiguriert werden.
 
 ## 3. Unterstütze Geräte
-Das Modul wird grundsätzlich für eine UVR16x2 programmiert / getestet. Da die CMI von Technische Alternative aber alle Werte via CAN-Bus zur Verfügung stellen kann, ist auch die Steuerung anderer Geräte möglich.
+Das Modul wird grundsätzlich für eine UVR16x2 programmiert / getestet. Da die CMI von Technische Alternative aber alle Werte (CAN-Bus, DL-Bus, ModBus, SMS) via CoE zur Verfügung stellen kann, ist auch die Steuerung anderer Geräte am CAN-Bus und der Empfang von Daten der anderen CMI-Eingänge möglich. 
 
 Hersteller: Technische Alternative
 
@@ -153,10 +153,10 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | 9        | Digital  | 17-32            |
 
   Nicht definierte Werte eines Blockes werden immer als 0-Wert gesendet. Daher ist es wichtig, dass bei mehreren CMIs darauf geachtet wird, dass diese entweder eine andere Knoten-Nr oder einen Netzwerkausgang aus einem anderen Block für den CoE-Ausgang verwenden.
-  Wird dies nicht beachtet, überscheiben die beiden CMIs die entsprechenden Werte jeweis gegenseitig.
+  Wird dies nicht beachtet, überscheiben die beiden CMIs die entsprechenden Werte jeweils gegenseitig.
 
   **Sendebedingungen**
-  
+
   Da immer der ganze Block mit den aktuellsten Werten gesendet wird, kann es sein, dass neue Werte in IPS ankommen, obwohl die Sendebedingung für einen bestimmten Wert auf der CMI gar nicht erfüllt war.
   Ist die Sendebedingung für einen beliebigen Wert aus demselben Block erfüllt ist somit die Sendebedingung für alle Werte innerhalb desselben Blockes erfüllt.
 
@@ -179,7 +179,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   <p align="center"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9M6W4KM34HWMA&source=url" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>
 
 ## 7. Support
-Fragen, Anregungen, Kritik und Fehler zu diesem Modul können im entsprechenden [Thread des IPS-Forums]() (noch nicht verfügbar) deponiert werden.
+Fragen, Anregungen, Kritik und Fehler zu diesem Modul können im entsprechenden [Thread des IPS-Forums](https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe) deponiert werden.
 Da das Modul in der Freizeit entwickelt wird, kann es jedoch eine Weile dauern, bis eine Antwort im Forum verfügbar oder ein entsprechendes Update vorhanden ist. Besten Dank für euer Verständnis :-)
 
 ## 8. Lizenz
