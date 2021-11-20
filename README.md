@@ -6,7 +6,7 @@
 
 # SymconJoTTACoE
 Erweiterung zum Lesen/Schreiben der Werte eines Gerätes von <a href="https://www.ta.co.at/x2-frei-programmierbare-regler/" target="_blank">Technische Alternative</a> via CAN over Ethernet (CoE) in IP-Symcon.
-Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verbunden wird. Über das CoE-Protokoll lassen sich Werte aus dem CAN-Bus empfangen/sendenn ohne die Limitierungen der JSON-API (kann nur einmal pro Minute Werte lesen aber keine Werte schreiben).
+Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verbunden wird. Über das CoE-Protokoll lassen sich Werte aus dem CAN-Bus empfangen/sendenn ohne die Limitierungen der JSON-API. Diese kann nur einmal pro Minute Werte lesen aber keine Werte schreiben, benötigt dafür aber deutlich weniger Konfigurationsaufwand.
 
 ## Dokumentation
 <p align="right"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9M6W4KM34HWMA&source=url" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>
@@ -30,7 +30,7 @@ Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verb
 8. [Lizenz](#8-lizenz)
 
 ## 1. Funktionsumfang
-Jede Instanz des Modules kann bis 32 analoge und 32 digitale Werte über das CoE-Protokoll empfangen oder senden. Für jede Instanz-Variable kann der Zustand einzeln konfiguriert werden (deaktiviert, aktiviert, empfangen, senden, senden & empfangen). Zudem ist es möglich, das Variablen-Profil direkt über das CoE-Protokoll auszulesen oder auch zu schreiben. Pro Instanz kann eine Remote-CMI angebunden und eine eigene KnotenNr für den CAN-Bus definiert werden.
+Jede Instanz des Modules kann bis 32 analoge und 32 digitale Werte über das CoE-Protokoll empfangen oder senden. Für jede Instanz-Variable kann der Zustand einzeln konfiguriert werden (Deaktiviert, Aktiviert, Eingang, Ausgang, Eingang / Ausgang). Zudem ist es möglich, das Variablen-Profil direkt über das CoE-Protokoll auszulesen oder auch zu schreiben. Pro Instanz kann eine Remote-CMI angebunden und eine eigene KnotenNr für den CAN-Bus definiert werden.
 
 Es ist auch möglich, das Modul in Kombination mit dem in IPS integrierten Modul "Technische Alternative" zu kombinieren. Das integrierte Modul nutzt die JSON-API um mit einem geringen Konfigurationsaufwand die Daten zu lesen (nur einmal pro Minute) und dieses Modul würde dann nur zum Senden von neuen Werten genutzt.
 
@@ -46,7 +46,7 @@ Das Modul wird grundsätzlich für eine UVR16x2 programmiert / getestet. Da die 
 Hersteller: Technische Alternative
 
 ## 4. Modul-Installation / Update
-Die Installation erfolgt über den IPS Module-Store. In der Suche einfach "JoTTACoE" oder "CoE-Knoten" eingeben und die Installation starten.
+Die Installation erfolgt über den IPS Module-Store. In der Suche einfach *JoTTACoE* oder *CoE-Knoten* eingeben und die Installation starten.
 Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modul auf "Aktualisieren" klicken.
 
 **Das Modul wird für den privaten Gebrauch kostenlos zur Verfügung gestellt.**
@@ -58,30 +58,30 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 ## 5. Einrichten der Instanz in IP-Symcon
   ### 1. Erstellen einer neuen Instanz
    1. Neue Instanz hinzufügen
-   2. Im Schnellfilter "CoE-Knoten" eingeben
-   3. Das Gerät "CoE-Knoten (Remote-CMI)" auswählen
+   2. Im Schnellfilter *CoE-Knoten* eingeben
+   3. Das Gerät *CoE-Knoten (Remote-CMI)* auswählen
    4. Name & Ort anpassen (optional)
    5. Falls noch keine UDP-Socket Instanz vorhanden ist, wird eine solche erstellt. Diese entsprechend konfigurieren:
-      - Socket öffnen: Ein
-      - Sende-Host/-Port: leer lassen (Derselbe UDP-Socket kann für mehrere Instanzen genutzt werden. Die IP der jeweiligen CMI wird direkt im Modul eingestellt.)
-      - Empf.-Host: IP-Adresse von IPS auswählen (Gleiche IP muss auf der CMI in der Konfiguration der CoE-Ausgänge angegeben werden.)
-      - Empf.-Port: 5441
-      - Aktiviere Broadcast: Aus
-      - Aktiviere Reuse Address: Aus
+      - *Socket öffnen:* Ein
+      - *Sende-Host/-Port:* leer lassen (Derselbe UDP-Socket kann für mehrere Instanzen genutzt werden. Die IP der jeweiligen CMI wird direkt im Modul eingestellt.)
+      - *Empf.-Host:* IP-Adresse von IPS auswählen (Gleiche IP muss auf der CMI in der Konfiguration der CoE-Ausgänge angegeben werden.)
+      - *Empf.-Port:* 5441
+      - *Aktiviere Broadcast:* Aus
+      - *Aktiviere Reuse Address:* Aus
 
   ### 2. Konfiguration der Instanz
-  - IP-Adresse: IP der CMI
-  - Empfange von Knoten-Nr: Eine beliebige Zahl zwischen 0 (= Empfang deaktiviert) und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein. Die gleiche Knoten-Nr muss in der CMI auf den CoE-Ausgängen angegeben werden.
-  - Eigene Knoten-Nr: Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie "Empfange von Knoten-Nr". Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Endgeräte angegeben werden.
+  - *IP-Adresse:* IP-Adresse der CMI
+  - *Empfange von Knoten-Nr:* Eine beliebige Zahl zwischen 0 (= Empfang deaktiviert) und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein. Die gleiche Knoten-Nr muss in der CMI auf den CoE-Ausgängen angegeben werden.
+  - *Eigene Knoten-Nr:* Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Endgeräte angegeben werden.
   - Analoge / Digitle Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten):
-    - Ident: Eindeutiger Name (Ident) der Variable innerhalb jeder Modul-Instanz. Diese Nr (ohne den Buchstaben) wird für den Netzwerkausgang (CoE-Ausgang auf der CMI) oder die Ausgangsnummer (CAN-Eingang auf Endgerät) angegeben.
-    - Name: Entspricht dem Namen der Instanz-Variable in IPS (kann nur über die Eigenschaften der Variable im IPS-Objektbaum geändert werden).
-    - Variable: Definiert einen der folgenden Zustände der Instanz-Variable:
-      - Deaktiviert: Instanz-Variable wird nicht erstellt / verwendet und empfängt auch keine Werte.
-      - Aktiviert: Instanz-Variable wird erstellt, empfängt / sendet aber keine Werte (Kann genutzt werden um die Variable temporär zu deaktivieren, ohne diese zu löschen. So bleibt die Objekt-ID erhalten.)
-      - Eingang: Instanz-Variable wird erstellt und empfängt Werte vom entsprechenden CoE-Netzwerkausgang.
-      - Ausgang: Instanz-Variable wird erstellt und kann Werte an den entsprechenden CAN-Ausgang senden. Der Wert wird nach dem Senden sofort in die Variable geschrieben, auch wenn er ev. auf dem CAN-Bus niergends empfangen wurde (CoE kennt keine Quittierung).
-      - Eingang / Ausgang: Instanz-Variable wird erstellt und kann Werte senden & empfangen. Beim Senden wird der Wert jedoch nicht automatisch in die Variable geschrieben, sonder erst wenn dieser via CoE wieder empfangen wird (dazu muss eine entsprechende Empfangs-Quittierung auf dem Endgerät programmiert werden).
+    - *Ident:* Eindeutiger Name (Ident) der Variable innerhalb jeder Modul-Instanz. Diese Nr (ohne den Buchstaben) wird für den Netzwerkausgang (CoE-Ausgang auf der CMI) oder die Ausgangsnummer (CAN-Eingang auf Endgerät) angegeben.
+    - *Name:* Entspricht dem Namen der Instanz-Variable in IPS (kann nur über die Eigenschaften der Variable im IPS-Objektbaum geändert werden).
+    - *Variable:* Definiert einen der folgenden Zustände der Instanz-Variable:
+      - *Deaktiviert:* Instanz-Variable wird nicht erstellt / verwendet und empfängt auch keine Werte.
+      - *Aktiviert:* Instanz-Variable wird erstellt, empfängt / sendet aber keine Werte (Kann genutzt werden um die Variable temporär zu deaktivieren, ohne diese zu löschen. So bleibt die Objekt-ID erhalten.)
+      - *Eingang:* Instanz-Variable wird erstellt und empfängt Werte vom entsprechenden CoE-Netzwerkausgang.
+      - *Ausgang:* Instanz-Variable wird erstellt und kann Werte an den entsprechenden CAN-Ausgang senden. Der Wert wird nach dem Senden sofort in die Variable geschrieben, auch wenn er ev. auf dem CAN-Bus niergends empfangen wurde (CoE kennt keine Quittierung).
+      - *Eingang / Ausgang:* Instanz-Variable wird erstellt und kann Werte senden & empfangen. Beim Senden wird der Wert jedoch nicht automatisch in die Variable geschrieben, sonder erst wenn dieser via CoE wieder empfangen wird (dazu muss eine entsprechende Empfangs-Quittierung auf dem Endgerät programmiert werden).
 
   ### 3. Konfiguration Datenübertragung Endgerät zu CMI (CAN-Ausgänge)
   Damit die CMI Werte von einem Endgerät per CoE an IPS übertragen kann, müssen diese vom jeweiligen Endgerät zuerst auf den CAN-Bus übertragen (CAN-Ausgang) und von der CMI eingelesen (CAN-Eingang) werden.
@@ -91,17 +91,17 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 4. Konfiguration Datenübertragung CMI zu IPS (CoE-Ausgänge)
   Alle verfügbaren Werte auf einer CMI (CAN-Bus, DL-Bus, ModBus, SMS) können per CoE an IPS übermittelt werden. Pro Wert muss jeweils auf der CMI eine Konfiguration (Einstellungen -> Ausgänge -> CoE) erstellt werden:
-  - Bezeichnung: frei definierbar (der Übersicht halber ist es empfehlenswert für den gleichen Wert überall dieselbe Bezeichnung zu verwenden)
-  - Eingang: normalerweise CAN-Bus und der entsprechende Eingang (es können aber auch Werte der anderen Eingängen der CMI übertragen werden)
-  - IP: IP-Adresse von IPS (wie im UDP-Socket definiert)
-  - Knoten: Wert aus "Empfange von Knoten-Nr" der Modul-Instanz
-  - Netzwerkausgang: Nr "#" der jeweilgen Variable in der Modul-Instanz. Diese muss als "Eingang" oder "Eingang / Ausgang" konfiguriert sein. Wenn die entsprechende Variable nicht als Eingang definiert ist, wird der Wert verworfen (siehe Debug-Log).
-  - Sendebedingung: je nach Anforderung (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten)
+  - *Bezeichnung:* frei definierbar (der Übersicht halber ist es empfehlenswert für den gleichen Wert überall dieselbe Bezeichnung zu verwenden)
+  - *Eingang:* normalerweise CAN-Bus und der entsprechende Eingang (es können aber auch Werte der anderen Eingängen der CMI übertragen werden)
+  - *IP:* IP-Adresse von IPS (wie im UDP-Socket definiert)
+  - *Knoten:* Wert aus "Empfange von Knoten-Nr" der Modul-Instanz
+  - *Netzwerkausgang:* Nr "#" der jeweilgen Variable in der Modul-Instanz. Diese muss als "Eingang" oder "Eingang / Ausgang" konfiguriert sein. Wenn die entsprechende Variable nicht als Eingang definiert ist, wird der Wert verworfen (siehe Debug-Log).
+  - *Sendebedingung:* je nach Anforderung (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten)
 
   Die CMI übermittelt per CoE auch die Messgrösse, welche auf dem Eingang eingestellt ist. Die Instanz wertet diese aus und passt das Variablen-Profil entsprechend an. Wenn auf der Variable ein eigenes Profil definiert wird, zeigt IPS die Einheit des eigenen Profils an.
 
   ### 5. Konfiguration Datenübertragung IPS zu CMI/Endgerät (CAN-Eingänge)
-  Alle Werte, der als Ausgang definierten Instanz-Variablen, können per CoE an ein Endgerät, welches per CAN-Bus mit der CMI verbunden ist, übertragen werden. Dabei dient die CMI als transparenter Gateway zwischen IPS und Endgerät und sendet alle, per CoE empfangenen, Daten direkt an den CAN-Bus weiter. Daher muss der jeweilige CAN-Eingang nur auf dem Endgerät konfiguriert werden. Dazu wird auf dem Engerät als Knoten der Wert von "Eigene Knoten-Nr" der Modul-Instanz und als Ausgangsnummer die Nr "#" der entsprechenden Instanz-Variable angegeben.
+  Alle Werte, der als Ausgang definierten Instanz-Variablen, können per CoE an ein Endgerät, welches per CAN-Bus mit der CMI verbunden ist, übertragen werden. Dabei dient die CMI als transparenter Gateway zwischen IPS und Endgerät und sendet alle, per CoE empfangenen, Daten direkt an den CAN-Bus weiter. Daher muss der jeweilige CAN-Eingang nur auf dem Endgerät konfiguriert werden. Dazu wird auf dem Engerät als Knoten der Wert von *Eigene Knoten-Nr* der Modul-Instanz und als Ausgangsnummer die Nr *#* der entsprechenden Instanz-Variable angegeben.
   
   Details zur Konfiguration der CAN-Eingänge auf den Endgeräten, sind in den Handbüchern von Technische Alternative zu finden.
 
@@ -119,25 +119,26 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 ## 6. Anhang
   ### 1. CoE-Datenblöcke
   CAN over Ethernet (CoE) versendet immer mehrere Werte als Datenblöcke per UDP auf Port 5441. Bei analogen Daten werden jeweils 4 Werte, bei digitalen Daten 16 Werte gleichzeitig miteinander versendet (auch wenn diese nicht definiert oder geändert wurden).
-  Jedes CoE-Paket enthält jeweils im Header die Konten-Nr des Absenders sowie die Block-Nr und im Datenbereich die entsprechenden Werte und die Messgrösse als UnitID.
+  Jedes CoE-Paket besteht aus 14 Bytes. Dier ersten zwei Bytes sind für den Header reserviert und beinhalten die Konten-Nr des Absenders sowie die Block-Nr der Daten. Die restlichen 12 Daten-Bytes enthalten die entsprechenden Werte und die Messgrösse als UnitID.
 
   Analoge Daten:
-  | Byte:  | 1         | 2        | 3 + 4  | 5 + 6  | 7 + 8  | 9 + 10 | 11           | 12           | 13           | 14           |
-  | :----- | :-------- | :------- | :----- | :----- | :----- | :----- | :----------- | :----------- | :----------- | :----------- |
-  | Daten: | Knoten-Nr | Block-Nr | Wert 1 | Wert 2 | Wert 3 | Wert 4 | Messgrösse 1 | Messgrösse 2 | Messgrösse 3 | Messgrösse 4 |
+  | **Byte:**  | 1         | 2        | 3 + 4  | 5 + 6  | 7 + 8  | 9 + 10 | 11       | 12       | 13       | 14       |
+  | :--------- | :-------: | :------: | :----: | :----: | :----: | :----: | :------: | :------: | :------: | :------: |
+  | **Daten:** | Knoten-Nr | Block-Nr | Wert 1 | Wert 2 | Wert 3 | Wert 4 | UnitID 1 | UnitID 2 | UnitID 3 | UnitID 4 |
   
-  Die Werte werden immer dimensionslos (als Signed Short  / 16Bit Integer von -32768 bis +32767) übertragen. Anschliessend bestimmt die UnitID (Messgrösse), um wieviele Stellen das Komma nach links geschoben wird um den effektiven Wert mit Nachkommastellen und die Einheit  zu erhalten.
+  Die Werte werden immer dimensionslos als Signed Short (16-Bit Integer von -32768 bis +32767) als BigEndian übertragen. Anschliessend bestimmt die UnitID (Messgrösse), um wieviele Stellen das Komma nach links geschoben wird um den effektiven Wert mit Nachkommastellen und die Einheit zu erhalten.
 
   Digitale Daten:
-  | Byte:  | 1         | 2        | 3 + 4      | 5 - 10           | 11              | 12 - 14          |
-  | :----- | :-------- | :------- | :--------- | :--------------- | :-------------- | :--------------- |
-  | Daten: | Knoten-Nr | Block-Nr | Wert 1-16  | mit 0 aufgefüllt | Messgrösse ???  | mit 0 aufgefüllt |
+  | **Byte:**  | 1         | 2        | 3 + 4      | 5 - 10           | 11              | 12 - 14          |
+  | :----- --- | :-------: | :------: | :--------: | :--------------: | :-------------: | :--------------: |
+  | **Daten:** | Knoten-Nr | Block-Nr | Wert 1-16  | mit 0 aufgefüllt | Messgrösse ???  | mit 0 aufgefüllt |
   
-  Im ersten 16 Bit langen Wert-Block entspricht jedes Bit dem Zustand eines digitalen Ausgangs. Die restlichen 6 Wert-Bytes werden mit 0 aufgefüllt. Im ersten Messgrössen-Byte wird zwar etwas übertragen, aber bisher konnt ich noch nicht herausfinden was genau...
+  Im ersten 16-Bit langen Wert-Block entspricht jedes Bit dem Zustand eines digitalen Ausgangs. Die restlichen 6 Wert-Bytes werden mit 0 aufgefüllt. Im ersten Messgrössen-Byte wird zwar etwas übertragen, aber bisher konnte ich noch nicht herausfinden was genau.
+  Vermutlich wird zwischen zwei digitalen Einheiten (0 = Ein/Aus oder 1 = Nein/Ja) unterschieden. 
 
   Die einzelnen Netzwerkausgänge sind fixen Datenblöcken zugewiesen. Die Block-Nr teilt dem Empfänger mit, dass er jetzt die folgenden Werte übermittelt bekommt:
   | Block-Nr | Datentyp | Netzwerkausgänge |
-  | :------- | :------- |:---------------- |
+  | :------: | :------- |:---------------- |
   | 0        | Digital  | 1-16             |
   | 1        | Analog   | 1-4              |
   | 2        | Analog   | 5-8              |
@@ -161,6 +162,10 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 0.2 (BETA):
+  - Dokumentation aktualisiert
+  - Diverse kleine Fixes
+  
   Version 0.1 (ALPHA):  
   - Initale Erstellung des Modules.
   - Feedbacks zu Fehlern aber auch funktionierende Geräte & Konfigurationen sind willkommen.
