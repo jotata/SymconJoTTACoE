@@ -137,6 +137,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Vermutlich wird zwischen zwei digitalen Einheiten (0 = Ein/Aus oder 1 = Nein/Ja) unterschieden. 
 
   **Datenblöcke**
+
   Die einzelnen Netzwerkausgänge sind fixen Datenblöcken zugewiesen. Die Block-Nr teilt dem Empfänger mit, dass er jetzt die folgenden Werte übermittelt bekommt:
   | Block-Nr | Datentyp | Netzwerkausgänge |
   | :------: | :------- |:---------------- |
@@ -155,6 +156,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Wird dies nicht beachtet, überscheiben die beiden CMIs die entsprechenden Werte jeweis gegenseitig.
 
   **Sendebedingungen**
+  
   Da immer der ganze Block mit den aktuellsten Werten gesendet wird, kann es sein, dass neue Werte in IPS ankommen, obwohl die Sendebedingung für einen bestimmten Wert auf der CMI gar nicht erfüllt war.
   Ist die Sendebedingung für einen beliebigen Wert aus demselben Block erfüllt ist somit die Sendebedingung für alle Werte innerhalb desselben Blockes erfüllt.
 
