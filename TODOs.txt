@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   21.11.2021 21:00:52
+ * @Last Modified:   21.11.2021 21:02:50
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -24,6 +24,7 @@ x Option zum deaktivieren des ReceiveData-Filters
 - Anzeige der installierten Version im Konfigurationsform hinzufügen (inkl. Spenden PayPal-Button?)
 - Ping/Connection-Test Port 5441 auf IP Remote-CMI
 - Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
+- Fehleranalyse enabled / visible = false funktioniert initial bei NumberSpinner (Empfange von KnotenNr) nicht, über $this->UpdateFormField aber dann doch (IPS-Bug?)
 
 FEATURES & FIXES V1.0
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
