@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   21.11.2021 09:58:21
+ * @Last Modified:   21.11.2021 21:00:52
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -18,15 +18,18 @@ x SendData: ganze Funktionalität
 x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer noch mit Custom-Profil überschreiben
 x PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
 x Update ReadMe / Doku
+x Status, wenn bisher keine Daten empfangen wurden (Stimmen Remote-IP und Empfange von KnotenNr?)
+x Option zum deaktivieren des ReceiveData-Filters
 - Kontrolle Voraussetzungen Gateway (Port & Active)
-- Ping auf IP Remote-CMI
+- Anzeige der installierten Version im Konfigurationsform hinzufügen (inkl. Spenden PayPal-Button?)
+- Ping/Connection-Test Port 5441 auf IP Remote-CMI
 - Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
 
 FEATURES & FIXES V1.0
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
   Alternativ prüfen, was TA hier vorschlägt...
 - PHPUnit-Test SendData & ReceiveData
-- Funktion zum senden eines beliebigen Wertes?
+- Funktion zum Senden eines beliebigen Wertes?
 
 FEATURES & FIXES V??
 - Integration weitere Tests
