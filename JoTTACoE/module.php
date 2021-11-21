@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   21.11.2021 18:17:59
+ * @Last Modified:   21.11.2021 20:49:18
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -42,6 +42,7 @@ class JoTTACoE extends IPSModule {
         $this->ConnectParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}'); //UDP-Socket
         $this->RegisterPropertyString('RemoteIP', ''); //IP der Remote-CMI
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
+        $this->RegisterPropertyBoolean('DisableReceiveDataFilter', 0); //Wenn ReceiveDataFilter deaktiviert werden soll
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
         $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
@@ -77,13 +78,16 @@ class JoTTACoE extends IPSModule {
         parent::ApplyChanges();
 
         //ReceiveDataFilter anpassen
-        $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr'))), '"'); //RemoteNodeNr JSON-Codiert
-        if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
-            $filter = 'DEAKTIVIERT';
-        } else { //Empfang aktiviert
-            $remoteIP = $this->ReadPropertyString('RemoteIP');
-            $filter = '.*' . preg_quote(',"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
-            $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss Host-IP aus dem UDP-Socket entsprechen
+        $filter = '';
+        if ($this->ReadPropertyBoolean('DisableReceiveDataFilter') === false) {
+            $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr'))), '"'); //RemoteNodeNr JSON-Codiert
+            if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
+                $filter = 'DEAKTIVIERT';
+            } else { //Empfang aktiviert
+                $remoteIP = $this->ReadPropertyString('RemoteIP');
+                $filter = '.*' . preg_quote(',"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
+                $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss Host-IP aus dem UDP-Socket entsprechen
+            }
         }
         $this->SendDebug('Set ReceiveDataFilter to', $filter . '.*', 0);
         $this->SetReceiveDataFilter($filter . '.*');
@@ -145,6 +149,7 @@ class JoTTACoE extends IPSModule {
 
         //Variabeln in $form ersetzen
         $form = file_get_contents(__DIR__ . '/form.json');
+        $form = str_replace('$EnableRemoteNodeNr', $this->ConvertToBoolStr($this->ReadPropertyBoolean('DisableReceiveDataFilter'), true), $form);
         $form = str_replace('"$AnalogValues"', json_encode($AnalogValues), $form);
         $form = str_replace('"$DigitalValues"', json_encode($DigitalValues), $form);
         return $form;
@@ -231,7 +236,7 @@ class JoTTACoE extends IPSModule {
                 $values[$ident]['UnitID'] = $unitID;
             }
         } else { //Ungültige Daten
-            $this->ThrowMessage('Unknown data header (block): ' . $header['Block'] . ' - Skipping');
+            $this->ThrowMessage('Error - Unknown data header! NodeNr: \'' . @$header['NodeNr'] . '\' Block: \'' . @$header['Block'] . '\' - Skipping');
             return;
         }
 

@@ -5,7 +5,7 @@
 [![Release Version](https://img.shields.io/github/v/release/jotata/SymconJoTTACoE)](https://github.com/jotata/SymconJoTTACoE/releases)
 
 # SymconJoTTACoE
-Erweiterung zum Lesen/Schreiben der Werte eines Gerätes von <a href="https://www.ta.co.at/x2-frei-programmierbare-regler/" target="_blank">Technische Alternative</a> via CAN over Ethernet (CoE) in IP-Symcon.
+Erweiterung zum Lesen/Schreiben der Werte eines Gerätes von <a href="https://www.ta.co.at/x2-frei-programmierbare-regler/" target="_blank">Technische Alternative</a> via CAN over Ethernet (CoE) in IP-Symcon (IPS).
 Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verbunden wird. Über das CoE-Protokoll lassen sich Werte aus dem CAN-Bus empfangen/senden ohne die Limitierungen der JSON-API. Diese kann nur einmal pro Minute Werte lesen aber keine Werte schreiben, benötigt dafür aber deutlich weniger Konfigurationsaufwand.
 
 ## Dokumentation
@@ -71,9 +71,10 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 2. Konfiguration der Instanz
   - **IP-Adresse:** IP-Adresse der CMI
+  - **Empfange alle Daten:** Wird diese Option aktiviert, hört die Instanz auf alle Daten, welche via UDP Port 5441 an IPS gesendet werden (praktisch um im Debug-Log zu sehen, was die CMI alles sendet). Sonst hört die Instanz nur auf Daten von *IP-Adresse* und *Empfange von Knoten-Nr*.
   - **Empfange von Knoten-Nr:** Eine beliebige Zahl zwischen 0 (= Empfang deaktiviert) und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein. Die gleiche Knoten-Nr muss in der CMI auf den CoE-Ausgängen angegeben werden.
   - **Eigene Knoten-Nr:** Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Endgeräte angegeben werden.
-  - Analoge / Digitle Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten):
+  - Analoge / Digitale Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten):
     - **Ident:** Eindeutiger Name (Ident) der Variable innerhalb jeder Modul-Instanz. Diese Nr (ohne den Buchstaben) wird für den Netzwerkausgang (CoE-Ausgang auf der CMI) oder die Ausgangsnummer (CAN-Eingang auf Endgerät) angegeben.
     - **Name:** Entspricht dem Namen der Instanz-Variable in IPS (kann nur über die Eigenschaften der Variable im IPS-Objektbaum geändert werden).
     - **Variable:** Definiert einen der folgenden Zustände der Instanz-Variable:
@@ -90,7 +91,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Details zur Konfiguration der CAN-Ausgänge auf den Endgeräten und wie diese auf der CMI empfangen werden, sind in den Handbüchern von Technische Alternative zu finden.
 
   ### 4. Konfiguration Datenübertragung CMI zu IPS (CoE-Ausgänge)
-  Alle verfügbaren Werte auf einer CMI (CAN-Bus, DL-Bus, ModBus, SMS) können per CoE an IPS übermittelt werden. Pro Wert muss jeweils auf der CMI eine Konfiguration (Einstellungen -> Ausgänge -> CoE) erstellt werden:
+  Alle verfügbaren Werte auf einer CMI (CAN-Bus, DL-Bus, ModBus, SMS) können per CoE an IP-Symcon übermittelt werden. Pro Wert muss jeweils auf der CMI eine Konfiguration (Einstellungen -> Ausgänge -> CoE) erstellt werden:
   - **Bezeichnung:** frei definierbar (der Übersicht halber ist es empfehlenswert für den gleichen Wert überall dieselbe Bezeichnung zu verwenden)
   - **Eingang:** normalerweise CAN-Bus und der entsprechende Eingang (es können aber auch Werte der anderen Eingängen der CMI übertragen werden)
   - **IP:** IP-Adresse von IPS (wie im UDP-Socket definiert)

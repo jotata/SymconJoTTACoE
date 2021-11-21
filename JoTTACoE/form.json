@@ -22,10 +22,16 @@
                     "caption": "IP Address",
                     "validate": "^(?!0)(?!.*\\.$)((1?\\d?\\d|25[0-5]|2[0-4]\\d)(\\.|$)){4}$"
                 },{
+                    "type": "CheckBox", 
+                    "name": "DisableReceiveDataFilter", 
+                    "caption": "Receive all data (disable ReceiveDataFilter)",
+                    "onChange": "IPS_RequestAction($id, 'DynamicFormField', json_encode(['Field' => 'RemoteNodeNr', 'Parameter' => 'enabled', 'Value' => ($DisableReceiveDataFilter === false)]));"
+                },{
                     "type": "NumberSpinner",
                     "name": "RemoteNodeNr",
                     "caption": "Listen to Node Number",
                     "suffix": "(0 = disabled)",
+                    "enabled": "$EnableRemoteNodeNr",
                     "minimum": 0,
                     "maximum": 62 
                 }
