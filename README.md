@@ -46,7 +46,7 @@ Das Modul wird grundsätzlich für eine UVR16x2 programmiert / getestet. Da die 
 Hersteller: Technische Alternative
 
 ## 4. Modul-Installation / Update
-Die Installation erfolgt über den IPS Module-Store. In der Suche einfach *JoTTACoE* oder *CoE-Knoten* eingeben und die Installation starten.
+Die Installation erfolgt über den IPS Module-Store. In der Suche einfach **CoE-Knoten (JoTTACoE)** (solange das Modul noch BETA ist muss unbeding der komplette Name angegeben werden, damit dieses angezeigt wird) eingeben und die Installation starten.
 Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modul auf "Aktualisieren" klicken.
 
 **Das Modul wird für den privaten Gebrauch kostenlos zur Verfügung gestellt.**
