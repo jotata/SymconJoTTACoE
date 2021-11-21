@@ -1,17 +1,13 @@
 {
     "status": [
         {
-            "code": 408, 
-            "icon": "error", 
-            "caption": "Error - Request Timeout!"
+            "code": 204, 
+            "icon": "active", 
+            "caption": "Waiting for data..."
         },{
-            "code": 416, 
+            "code": 424, 
             "icon": "error", 
-            "caption": "Error - Range Not Satisfiable / Wrong Device!"
-        },{
-            "code": 428, 
-            "icon": "error", 
-            "caption": "Error - Precondition Required!"
+            "caption": "Error - Failed Dependency!"
         }
     ],
     "elements":[

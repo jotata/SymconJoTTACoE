@@ -1,9 +1,8 @@
 {
     "translations": {
         "de": {
-            "Error - Request Timeout!": "Fehler - Zeitüberschreitung bei der Geräte-Abfrage!",
-            "Error - Range Not Satisfiable / Wrong Device!": "Fehler - Erhaltene Antwort nicht passend / Falsches Gerät!",
-            "Error - Precondition Required!": "Fehler - Voraussetzungen nicht erfüllt!",
+            "Waiting for data...": "Warte auf Daten...",
+            "Error - Failed Dependency!": "Fehler - Voraussetzungen nicht erfüllt!",
             "Configuration Remote CMI": "Konfiguration Remote-CMI",
             "IP Address": "IP-Adresse",
             "Listen to Node Number": "Empfange von Knoten-Nr",

@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   20.11.2021 12:50:37
+ * @Last Modified:   21.11.2021 18:17:59
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -24,7 +24,8 @@ class JoTTACoE extends IPSModule {
     protected const PREFIX = 'JoTTACoE';
     protected const MODULEID = '{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}';
     protected const STATUS_Ok_InstanceActive = 102;
-    protected const STATUS_Error_PreconditionRequired = 428;
+    protected const STATUS_Ok_WaitingData = 204;
+    protected const STATUS_Error_FailedDependency = 424;
     protected const LED_Off = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUAQMAAAC3R49OAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAADUExURcPDw9YpAkQAAAAJcEhZcwAAFiQAABYkAZsVxhQAAAANSURBVBjTY6AqYGAAAABQAAGwhtz8AAAAAElFTkSuQmCC';
     protected const LED_Read = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAA3SURBVDhPpcexDQAwCMAw/n+a7p6IKnnxzH7wiU984hOf+MQnPvGJT3ziE5/4xCc+8YlP/N3OA6M/joCROxOnAAAAAElFTkSuQmCC';
     protected const LED_Write = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAAiSURBVDhPY/zPQD5ggtJkgVHNJIJRzSSCUc0kgiGpmYEBACKcASfOmBk0AAAAAElFTkSuQmCC';
@@ -110,6 +111,9 @@ class JoTTACoE extends IPSModule {
                 }
             }
         }
+
+        //Status anpassen
+        $this->SetStatus(self::STATUS_Ok_WaitingData);
     }
 
     /**
@@ -161,6 +165,9 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function ReceiveData($JSONString) {
+        if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
+            $this->SetStatus(self::STATUS_Ok_InstanceActive);
+        }
         $this->SendDebug('RECEIVE DATA -> JSONString', $JSONString, 0);
         $data = json_decode($JSONString);
         $buffer = utf8_decode($data->Buffer);
@@ -265,7 +272,7 @@ class JoTTACoE extends IPSModule {
      */
     private function RequestVariableAction(string $Ident, $Value) {
         if ($this->HasActiveParent() === false) {
-            $this->SetStatus(self::STATUS_Error_PreconditionRequired);
+            $this->SetStatus(self::STATUS_Error_FailedDependency);
             return false;
         }
 
@@ -349,7 +356,7 @@ class JoTTACoE extends IPSModule {
             }
             return true;
         }
-        $this->SetStatus(self::STATUS_Error_PreconditionRequired);
+        $this->SetStatus(self::STATUS_Error_FailedDependency);
         return false;
     }
 
