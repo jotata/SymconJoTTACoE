@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   20.11.2021 15:11:46
+ * @Last Modified:   21.11.2021 09:58:21
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -18,6 +18,9 @@ x SendData: ganze Funktionalität
 x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer noch mit Custom-Profil überschreiben
 x PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
 x Update ReadMe / Doku
+- Kontrolle Voraussetzungen Gateway (Port & Active)
+- Ping auf IP Remote-CMI
+- Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
 
 FEATURES & FIXES V1.0
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
