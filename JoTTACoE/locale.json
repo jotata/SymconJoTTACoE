@@ -7,7 +7,7 @@
             "IP Address": "IP-Adresse",
             "Listen to Node Number": "Empfange von Knoten-Nr",
             "(0 = disabled)": "(0 = deaktiviert)",
-            "Receive all data (disable ReceiveDataFilter)": "Empfange alle Daten (ReceiveData-Filter deaktivieren)",
+            "Receive all data (only use for debugging data)": "Empfange alle Daten (nur für Debugging verwenden)",
             "Configuration CoE Node": "Konfiguration CoE-Knoten",
             "Own Node Number": "Eigene Knoten-Nr",
             "Analog variables": "Analoge Variablen",

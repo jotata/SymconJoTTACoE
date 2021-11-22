@@ -71,7 +71,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 2. Konfiguration der Instanz
   - **IP-Adresse:** IP-Adresse der CMI
-  - **Empfange alle Daten:** Wird diese Option aktiviert, hört die Instanz auf alle Daten, welche via UDP Port 5441 an IPS gesendet werden (praktisch um im Debug-Log zu sehen, was die CMI alles sendet). Sonst hört die Instanz nur auf Daten von *IP-Adresse* und *Empfange von Knoten-Nr*.
+  - **Empfange alle Daten:** Wird diese Option aktiviert, hört die Instanz auf alle Daten, welche via UDP Port 5441 an IPS gesendet werden (praktisch um im Debug-Log zu sehen, was die CMI alles sendet). Sonst hört die Instanz nur auf Daten von *IP-Adresse* und *Empfange von Knoten-Nr*. Diese Option sollte im produktiven Betrieb deaktiviert werden, da sonst mehrere CMIs in dieselben Variablen schreiben können.
   - **Empfange von Knoten-Nr:** Eine beliebige Zahl zwischen 0 (= Empfang deaktiviert) und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein. Die gleiche Knoten-Nr muss in der CMI auf den CoE-Ausgängen angegeben werden.
   - **Eigene Knoten-Nr:** Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Endgeräte angegeben werden.
   - Analoge / Digitale Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten):
