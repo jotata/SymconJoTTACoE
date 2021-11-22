@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   21.11.2021 20:49:18
+ * @Last Modified:   22.11.2021 19:42:17
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -80,7 +80,10 @@ class JoTTACoE extends IPSModule {
         //ReceiveDataFilter anpassen
         $filter = '';
         if ($this->ReadPropertyBoolean('DisableReceiveDataFilter') === false) {
-            $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr'))), '"'); //RemoteNodeNr JSON-Codiert
+            $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr')), JSON_UNESCAPED_SLASHES), '"'); //RemoteNodeNr JSON-Codiert (JSON_UNESCAPED_SLASHES => 47 => / anstatt \/)
+            if (substr($remoteNodeNr, 0 , 2) === '\u') { //https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe/126900/16?u=jotata
+                $remoteNodeNr = '\u' . strtoupper(substr($remoteNodeNr, 2)); //json_encode produziert Unicode (0-7, 11, 14-31) mit Kleinbuchstaben, im Buffer sind es aber Grossbuchstaben
+            }
             if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
                 $filter = 'DEAKTIVIERT';
             } else { //Empfang aktiviert
@@ -89,8 +92,8 @@ class JoTTACoE extends IPSModule {
                 $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss Host-IP aus dem UDP-Socket entsprechen
             }
         }
-        $this->SendDebug('Set ReceiveDataFilter to', $filter . '.*', 0);
-        $this->SetReceiveDataFilter($filter . '.*');
+        $this->SendDebug('Set ReceiveDataFilter to', "$filter.*", 0);
+        $this->SetReceiveDataFilter("$filter.*");
 
         if ($this->GetStatus() !== IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
             $units = json_decode($this->GetBuffer('Units'));
