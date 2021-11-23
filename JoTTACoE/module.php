@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   22.11.2021 19:42:17
+ * @Last Modified:   22.11.2021 22:00:04
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -21,6 +21,7 @@ class JoTTACoE extends IPSModule {
     use VariableProfile;
     use Translation;
     use RequestAction;
+    use ModuleInfo;
     protected const PREFIX = 'JoTTACoE';
     protected const MODULEID = '{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}';
     protected const STATUS_Ok_InstanceActive = 102;
@@ -81,7 +82,7 @@ class JoTTACoE extends IPSModule {
         $filter = '';
         if ($this->ReadPropertyBoolean('DisableReceiveDataFilter') === false) {
             $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr')), JSON_UNESCAPED_SLASHES), '"'); //RemoteNodeNr JSON-Codiert (JSON_UNESCAPED_SLASHES => 47 => / anstatt \/)
-            if (substr($remoteNodeNr, 0 , 2) === '\u') { //https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe/126900/16?u=jotata
+            if (substr($remoteNodeNr, 0, 2) === '\u') { //https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe/126900/18
                 $remoteNodeNr = '\u' . strtoupper(substr($remoteNodeNr, 2)); //json_encode produziert Unicode (0-7, 11, 14-31) mit Kleinbuchstaben, im Buffer sind es aber Grossbuchstaben
             }
             if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
@@ -89,7 +90,7 @@ class JoTTACoE extends IPSModule {
             } else { //Empfang aktiviert
                 $remoteIP = $this->ReadPropertyString('RemoteIP');
                 $filter = '.*' . preg_quote(',"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
-                $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss Host-IP aus dem UDP-Socket entsprechen
+                $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss IP der Remote-CMI entsprechen
             }
         }
         $this->SendDebug('Set ReceiveDataFilter to', "$filter.*", 0);
@@ -152,6 +153,7 @@ class JoTTACoE extends IPSModule {
 
         //Variabeln in $form ersetzen
         $form = file_get_contents(__DIR__ . '/form.json');
+        $form = $this->AddModuleInfoAsElement($form);
         $form = str_replace('$EnableRemoteNodeNr', $this->ConvertToBoolStr($this->ReadPropertyBoolean('DisableReceiveDataFilter'), true), $form);
         $form = str_replace('"$AnalogValues"', json_encode($AnalogValues), $form);
         $form = str_replace('"$DigitalValues"', json_encode($DigitalValues), $form);
