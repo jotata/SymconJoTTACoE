@@ -168,6 +168,10 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 3. Changelog
   Version 0.2 (BETA):
+  - Fix: ReceiveDataFilter korrigiert, so dass auch Daten von Nodes 11, 14-31 empfangen werden.
+  - Modul-Informationen hinzugefügt
+  
+  Version 0.2 (BETA):
   - Dokumentation aktualisiert
   - Diverse kleine Fixes
   
