@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   23.11.2021 22:48:24
+ * @Last Modified:   25.11.2021 19:28:31
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -25,7 +25,8 @@ x ReceiveDataFilter prüfen und ev. anpassen. Ev. stimmt die Codierung der Knote
 x Anzeige der installierten Version im Konfigurationsform hinzufügen (inkl. Spenden PayPal-Button?)
 - Kontrolle Voraussetzungen Gateway (Port & Active)
 - Ping/Connection-Test Port 5441 auf IP Remote-CMI
-- Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
+x Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
+- Senden in SendAllOutput überarbeiten / Senden ohne RequestAction?
 - Fehleranalyse enabled / visible = false funktioniert initial bei NumberSpinner (Empfange von KnotenNr) nicht, über $this->UpdateFormField aber dann doch (IPS-Bug?)
 
 FEATURES & FIXES V1.0
