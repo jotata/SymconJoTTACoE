@@ -42,11 +42,22 @@
             "expanded": "true",
             "items": [
                 {
-                    "type": "NumberSpinner",
-                    "name": "NodeNr",
-                    "caption": "Own Node Number",
-                    "minimum": 1,
-                    "maximum": 62 
+                    "type": "RowLayout",
+                    "items": [
+                        {
+                            "type": "NumberSpinner",
+                            "name": "NodeNr",
+                            "caption": "Own Node Number",
+                            "minimum": 1,
+                            "maximum": 62 
+                        },{
+                            "type": "NumberSpinner",
+                            "name": "OutputTimer",
+                            "caption": "Send outputs all (or immediately if there is a change)",
+                            "suffix": "minutes",
+                            "minimum": 0 
+                        }
+                    ]
                 },{
                     "type": "RowLayout",
                     "items": [
@@ -138,5 +149,9 @@
             ]    
         }
     ],
-    "actions":[]
+    "actions":[
+        {
+            "type": "TestCenter"
+        }
+    ]
 }

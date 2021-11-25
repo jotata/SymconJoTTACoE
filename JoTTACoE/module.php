@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   22.11.2021 22:00:04
+ * @Last Modified:   25.11.2021 18:11:28
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -45,6 +45,8 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
         $this->RegisterPropertyBoolean('DisableReceiveDataFilter', 0); //Wenn ReceiveDataFilter deaktiviert werden soll
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
+        $this->RegisterPropertyInteger('OutputTimer', 1); //Sende-Intervall der Ausgänge
+        $this->RegisterTimer('OutputTimer', 1 * 60 * 1000,  static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Ausgänge jede Minute senden
         $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
@@ -118,6 +120,8 @@ class JoTTACoE extends IPSModule {
                     $this->DisableAction($c->Ident);
                 }
             }
+            //Ausgangs-Timer setzen
+            $this->SetTimerInterval('OutputTimer', $this->ReadPropertyInteger('OutputTimer') * 60 * 1000);
         }
 
         //Status anpassen
@@ -368,6 +372,96 @@ class JoTTACoE extends IPSModule {
         }
         $this->SetStatus(self::STATUS_Error_FailedDependency);
         return false;
+    }
+
+    /**
+     * Sendet alle Ausgangs-Variablen an die CMI
+     * (wird normalerwise mittels Timer aufgerufen um ein Timeout auf den Eingängen der Regler zu verhindern)
+     * @access public 
+     */
+    public function SendAllOutputs() {
+        //Alle Ausgänge ermitteln und in Blöcken zusmmenfassen
+        $outputs = [];
+        $send = [];
+        $sent = -1;
+        foreach (['Analog', 'Digital'] as $type) {
+            $x = json_decode($this->ReadPropertyString($type));
+            foreach ($x as $c) {
+                if ($c->Config > 2) { //Output oder Input/Output
+                    $outputs[] = $c->Ident;
+                    $block = $this->GetBlockInfoByIdent($c->Ident);
+                    if ($sent !== $block->Nr) { //Block wird noch nicht gesendet (wenn Block gesendet wird, gehen alle Idents innerhalb des Blocks mit)
+                        $send[] = $c->Ident;
+                        $sent = $block->Nr;
+                    }
+                }
+            }
+        }
+
+        //Ausgangs-Blöcke senden
+        $this->SendDebug('SendOutputs', implode(' | ', $outputs), 0);
+        foreach ($send as $ident){
+            $this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
+        }
+    }
+
+    /**
+     * Gibt alle Block-Informationen basierend auf dem Variblen-Ident zurück.
+     * @param string $Ident einer Instanz-Variable
+     * @return stdObj mit Type, Nr, Min, Max, Text, Idents des Blocks oder false bei ungültigem Ident
+     * @access private
+     */
+    private function GetBlockInfoByIdent(string $Ident) {
+        //Block-Infos zusammenstellen
+        $type = substr($Ident, 0, 1);
+        $id = intval(substr($Ident, 1));
+        $blockNr = -1;
+        if ($id > 0 && $id < 33) {
+            if ($type === 'A') { //Analoger Block
+                $blockNr = intval(ceil($id / 4)); //BlockNr (1-8) berechnen
+            } else if ($type == 'D') { //Digitaler Block
+                $blockNr = 0; //Digital 1-16
+                if ($id > 16) { //Digital 17-32
+                    $blockNr  = 9; 
+                }
+            }
+            if ($blockNr > -1 && $blockNr < 10) { //gültiger Ident
+                return $this->GetBlockInfoByNr($blockNr); 
+            }
+        }
+        $this->ThrowMessage('Wrong Ident (%s) - has to be between A1-A32 or D1-D32', $Ident);
+        return false;
+    }
+
+    /**
+     * Gibt alle Block-Informationen basierend auf der BlockNr zurück.
+     * @param int $BlockNr zwischen 0-9
+     * @return stdObj mit Type, Nr, Min, Max, Text, Idents des Blocks oder false bei ungültiger BlockNr
+     * @access private
+     */
+    private function GetBlockInfoByNr(int $BlockNr) {
+        //Block-Infos zusammenstellen
+        if ($BlockNr === 0 || $BlockNr === 9) { //Digital
+            $type = 'D';
+            $min = 1; //erste ID von Block 0
+            if ($BlockNr === 9) { //Digital 17-32
+                $min = 17; //erste ID von Block 9
+            }
+            $max = $min + 15; //Digital immer 16 Werte pro Block
+        } else if ($BlockNr > 0 && $BlockNr < 9) { //Analog
+            $type = 'A';
+            $min = (($BlockNr - 1) * 4 + 1); //Erste ID des Blocks berechnen
+            $max = $min + 3; //Letzte Nr des Blocks berechnen
+        } else { //ungültige BlockNr
+            $this->ThrowMessage('Wrong BlockNr (%s) - has to be between 0-9', $BlockNr);
+            return false;
+        }
+        $text = "block $type$min-$type$max";
+        $idents = [];
+        for ($i = $min; $i <= $max; $i++) { //Alle Idents desselben Blocks zusammenstellen
+            $idents[] = $type.$i;
+        }
+        return (object)['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Text' => $text, 'Idents' => $idents]; 
     }
 
     /**

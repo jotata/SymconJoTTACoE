@@ -112,7 +112,8 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 3. Modul-Funktionen
   Die folgenden Funktionen stehen in IPS-Ereignissen/-Scripts zur Verfügung:
-  - IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value): steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI.
+  - **IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value):** steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI.
+  - **JOTTACoE_SendAllOutputs(int $InstanzID):** sendet alle aktiven Ausgangs-Variablen an die CMI/Regler.
 
   ### 5. Fehlersuche
   Die Debug-Funktion der Instanz liefert detaillierte Informationen über empfangenen / gesendeten Daten und die genutzen Datenblöcke. Auch verworfene Werte werden hier ausgegeben.
@@ -167,9 +168,10 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
-  Version 0.2 (BETA):
+  Version 0.3 (BETA):
   - Fix: ReceiveDataFilter korrigiert, so dass auch Daten von Nodes 11, 14-31 empfangen werden.
-  - Modul-Informationen hinzugefügt
+  - Modul-Informationen hinzugefügt.
+  - Instanz-Funktion / Timer zum senden aller Outputs hinzugefügt (verhindert Timeout auf Reglern).
   
   Version 0.2 (BETA):
   - Dokumentation aktualisiert

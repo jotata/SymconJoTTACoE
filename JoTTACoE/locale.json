@@ -10,13 +10,17 @@
             "Receive all data (only use for debugging data)": "Empfange alle Daten (nur für Debugging verwenden)",
             "Configuration CoE Node": "Konfiguration CoE-Knoten",
             "Own Node Number": "Eigene Knoten-Nr",
+            "Send outputs all (or immediately if there is a change)": "Sende Ausgänge alle (oder sofort bei Änderung)",
+            "minutes": "Minuten",
             "Analog variables": "Analoge Variablen",
             "Digital variables": "Digitale Variablen",
             "disabled": "Deaktiviert",
             "enabled": "Aktiviert",
             "input": "Eingang",
             "output": "Ausgang",
-            "input / output": "Eingang / Ausgang"
+            "input / output": "Eingang / Ausgang",
+            "Wrong Ident (%s) - has to be between A1-A32 or D1-D32": "Ungültiger Ident (%s) - muss zwischen A1-32 oder D1-32 sein",
+            "Wrong BlockNr (%s) - has to be between 0-9": "Ungültige BlockNr (%s) - muss zwischen 0-9 sein"
         }
     }
 }
