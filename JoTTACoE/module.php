@@ -46,7 +46,7 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyBoolean('DisableReceiveDataFilter', 0); //Wenn ReceiveDataFilter deaktiviert werden soll
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
         $this->RegisterPropertyInteger('OutputTimer', 1); //Sende-Intervall der Ausgänge
-        $this->RegisterTimer('OutputTimer', 1 * 60 * 1000,  static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Ausgänge jede Minute senden
+        $this->RegisterTimer('OutputTimer', 1 * 60 * 1000, static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Ausgänge jede Minute senden
         $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
         $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
@@ -268,6 +268,37 @@ class JoTTACoE extends IPSModule {
     }
 
     /**
+     * Sendet alle Ausgangs-Variablen an die CMI
+     * (wird normalerwise mittels Timer aufgerufen um ein Timeout auf den Eingängen der Regler zu verhindern)
+     * @access public
+     */
+    public function SendAllOutputs() {
+        //Alle Ausgänge ermitteln und in Blöcken zusmmenfassen
+        $outputs = [];
+        $send = [];
+        $sent = -1;
+        foreach (['Analog', 'Digital'] as $type) {
+            $x = json_decode($this->ReadPropertyString($type));
+            foreach ($x as $c) {
+                if ($c->Config > 2) { //Output oder Input/Output
+                    $outputs[] = $c->Ident;
+                    $block = $this->GetBlockInfoByIdent($c->Ident);
+                    if ($sent !== $block->Nr) { //Block wird noch nicht gesendet (wenn Block gesendet wird, gehen alle Idents innerhalb des Blocks mit)
+                        $send[] = $c->Ident;
+                        $sent = $block->Nr;
+                    }
+                }
+            }
+        }
+
+        //Ausgangs-Blöcke senden
+        $this->SendDebug('SendAllOutputs', implode(' | ', $outputs), 0);
+        foreach ($send as $ident) {
+            $this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
+        }
+    }
+
+    /**
      * Wird von IPS-Instanz Funktion PREFIX_RequestAction aufgerufen
      * und schreibt den Wert der Variable auf die Remote-CMI zurück
      * @param string $Ident der Variable
@@ -354,37 +385,6 @@ class JoTTACoE extends IPSModule {
     }
 
     /**
-     * Sendet alle Ausgangs-Variablen an die CMI
-     * (wird normalerwise mittels Timer aufgerufen um ein Timeout auf den Eingängen der Regler zu verhindern)
-     * @access public 
-     */
-    public function SendAllOutputs() {
-        //Alle Ausgänge ermitteln und in Blöcken zusmmenfassen
-        $outputs = [];
-        $send = [];
-        $sent = -1;
-        foreach (['Analog', 'Digital'] as $type) {
-            $x = json_decode($this->ReadPropertyString($type));
-            foreach ($x as $c) {
-                if ($c->Config > 2) { //Output oder Input/Output
-                    $outputs[] = $c->Ident;
-                    $block = $this->GetBlockInfoByIdent($c->Ident);
-                    if ($sent !== $block->Nr) { //Block wird noch nicht gesendet (wenn Block gesendet wird, gehen alle Idents innerhalb des Blocks mit)
-                        $send[] = $c->Ident;
-                        $sent = $block->Nr;
-                    }
-                }
-            }
-        }
-
-        //Ausgangs-Blöcke senden
-        $this->SendDebug('SendAllOutputs', implode(' | ', $outputs), 0);
-        foreach ($send as $ident){
-            $this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
-        }
-    }
-
-    /**
      * Gibt alle Block-Informationen basierend auf dem Variblen-Ident zurück.
      * @param string $Ident einer Instanz-Variable
      * @return stdObj mit Type, Nr, Min, Max, Text, Idents des Blocks oder false bei ungültigem Ident
@@ -398,14 +398,14 @@ class JoTTACoE extends IPSModule {
         if ($id > 0 && $id < 33) {
             if ($type === 'A') { //Analoger Block
                 $blockNr = intval(ceil($id / 4)); //BlockNr (1-8) berechnen
-            } else if ($type == 'D') { //Digitaler Block
+            } elseif ($type == 'D') { //Digitaler Block
                 $blockNr = 0; //Digital 1-16
                 if ($id > 16) { //Digital 17-32
-                    $blockNr  = 9; 
+                    $blockNr = 9;
                 }
             }
             if ($blockNr > -1 && $blockNr < 10) { //gültiger Ident
-                return $this->GetBlockInfoByNr($blockNr); 
+                return $this->GetBlockInfoByNr($blockNr);
             }
         }
         $this->ThrowMessage('Wrong Ident (%s) - has to be between A1-A32 or D1-D32', $Ident);
@@ -427,7 +427,7 @@ class JoTTACoE extends IPSModule {
                 $min = 17; //erste ID von Block 9
             }
             $max = $min + 15; //Digital immer 16 Werte pro Block
-        } else if ($BlockNr > 0 && $BlockNr < 9) { //Analog
+        } elseif ($BlockNr > 0 && $BlockNr < 9) { //Analog
             $type = 'A';
             $min = (($BlockNr - 1) * 4 + 1); //Erste ID des Blocks berechnen
             $max = $min + 3; //Letzte Nr des Blocks berechnen
@@ -438,9 +438,9 @@ class JoTTACoE extends IPSModule {
         $text = "Block $type$min-$type$max";
         $idents = [];
         for ($i = $min; $i <= $max; $i++) { //Alle Idents desselben Blocks zusammenstellen
-            $idents[] = $type.$i;
+            $idents[] = $type . $i;
         }
-        return (object)['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Text' => $text, 'Idents' => $idents]; 
+        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Text' => $text, 'Idents' => $idents];
     }
 
     /**
