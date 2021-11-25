@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   25.11.2021 18:11:28
+ * @Last Modified:   25.11.2021 19:25:33
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -211,36 +211,27 @@ class JoTTACoE extends IPSModule {
         //Daten verarbeiten
         $units = json_decode($this->GetBuffer('Units'));
         $values = [];
-        if ($header['Block'] == 0 || $header['Block'] == 9) { //Digitale Daten
-            $type = 'D';
-            if ($header['Block'] == 0) {
-                $block = 1;
-            } else {
-                $block = 17;
-            }
-            $strBlock = 'block D' . $block . '-D' . ($block + 15);
-            $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
+        $block = $this->GetBlockInfoByNr($header['Block']);
+        if (@$block->Type === 'D') { //Digitale Daten
+            $this->SendDebug("RECEIVE DATA ($block->Text) -> RAW", $buffer, 1);
             $hex = unpack('H2', $buffer); //nur Byte 3+4 enthalten digitale Daten
             $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
             $bin = str_repeat('0', (16 - strlen($bin))) . $bin; //auf 16 Bit mit 0 auffüllen
             $buffer = strrev($bin); //Bits in Reihenfolge umdrehen
-            $this->SendDebug("RECEIVE DATA ($strBlock) -> Bits", $bin, 0);
+            $this->SendDebug("RECEIVE DATA ($block->Text) -> Bits", $bin, 0);
             for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
-                $ident = 'D' . ($block + $i);
+                $ident = $block->Type . ($block->Min + $i);
                 $values[$ident]['Value'] = $bit;
                 $values[$ident]['UnitID'] = -1;
             }
-        } elseif ($header['Block'] > 0 && $header['Block'] < 9) { //Analoge Daten
-            $type = 'A';
-            $block = (($header['Block'] - 1) * 4 + 1);
-            $strBlock = 'block A' . $block . '-A' . ($block + 3);
-            $this->SendDebug("RECEIVE DATA ($strBlock) -> RAW", $buffer, 1);
+        } elseif (@$block->Type === 'A') { //Analoge Daten
+            $this->SendDebug("RECEIVE DATA ($block->Text) -> RAW", $buffer, 1);
             $x = unpack('s4Value/C4UnitID', $buffer);
             for ($i = 0; $i < 4; $i++) { //Werte berechnen und den entsprechenden Values zuweisen
                 $val = $x['Value' . ($i + 1)];
                 $unitID = $x['UnitID' . ($i + 1)];
-                $ident = 'A' . ($block + $i);
+                $ident = $block->Type . ($block->Min + $i);
                 $values[$ident]['Value'] = $this->UnitConvertDecimals($val, 0, $units->{$unitID}->Decimals);
                 $values[$ident]['UnitID'] = $unitID;
             }
@@ -257,18 +248,18 @@ class JoTTACoE extends IPSModule {
         foreach ($values as $ident => $value) {
             $strValues .= " | $ident: " . $value['Value'] . $units->{$value['UnitID']}->Suffix;
             $vID = @$this->GetIDForIdent($ident);
-            if ($vID === false || $config[$ident] !== 2 && $config[$ident] !== 4) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
+            if ($vID === false || ($config[$ident] !== 2 && $config[$ident] !== 4)) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
                 $discarded .= ", $ident";
             } else { //Variable aktualisieren
                 $this->SetValue($ident, $value['Value']);
-                if ($type === 'A') { //Bei analogen Werten das Profil, gemäss der vom CMI übermittelten UnitID, anpassen
+                if ($block->Type === 'A') { //Bei analogen Werten das Profil, gemäss der vom CMI übermittelten UnitID, anpassen
                     $this->MaintainVariable($ident, '', VARIABLETYPE_FLOAT, $units->{$value['UnitID']}->ProfileName, 0, true); //Es wird nur das Profil angepasst
                 }
             }
         }
-        $this->SendDebug("RECEIVE DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
+        $this->SendDebug("RECEIVE DATA ($block->Text) -> Values", trim($strValues, ' |'), 0);
         if (strlen($discarded) > 0) {
-            $this->SendDebug("RECEIVE DATA ($strBlock) -> Skipped", 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
+            $this->SendDebug("RECEIVE DATA ($block->Text) -> Skipped", 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
         }
     }
 
@@ -290,42 +281,31 @@ class JoTTACoE extends IPSModule {
             return false;
         }
 
-        //Parameter definieren
-        $type = substr($Ident, 0, 1);
-        if ($type == 'A') { //Analoge Daten
+        //Block-Informationen definieren
+        $block = $this->GetBlockInfoByIdent($Ident);
+        if ($block->Type === 'A') { //Analoge Daten
             $config = json_decode($this->ReadPropertyString('Analog'));
-            $block = ceil(intval(substr($Ident, 1)) / 4); //BlockNr (1-8) berechnen
-            $min = (($block - 1) * 4 + 1); //Erste ID des Blocks berechnen
-            $max = $min + 3; //Analog immer 4 Werte pro Block
-        } elseif ($type == 'D') { //Digitale Daten
+        } elseif ($block->Type === 'D') { //Digitale Daten
             $config = json_decode($this->ReadPropertyString('Digital'));
-            $block = 0; //Digital 1-16
-            $min = 1;
-            if (intval(substr($Ident, 1) > 16)) {
-                $block = 9; //Digital 17-32
-                $min = 17;
-            }
-            $max = $min + 15; //Digital immer 16 Werte pro Block
         }
-        $strBlock = "block $type$min-$type$max";
 
-        //Werte von IPS auslesen
+        //Werte des ganzen Blocks von IPS auslesen
         $units = json_decode($this->GetBuffer('Units'));
         $values = [];
         $strValues = '';
         $discarded = '';
         $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
-        for ($i = $min; $i <= $max; $i++) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
+        for ($i = $block->Min; $i <= $block->Max; $i++) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
             $v = 0;
             $u = 0;
-            $vID = @$this->GetIDForIdent("$type$i");
-            if ($config["$type$i"] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
-                if ("$type$i" == $Ident) { //neuen Wert übernehmen
+            $vID = @$this->GetIDForIdent("$block->Type$i");
+            if ($config["$block->Type$i"] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
+                if ("$block->Type$i" == $Ident) { //neuen Wert übernehmen
                     $v = $Value;
                 } else { //Wert von IPS-Variable auslesen
-                    $v = $this->GetValue("$type$i");
+                    $v = $this->GetValue("$block->Type$i");
                 }
-                if ($type == 'A') { //Unit ist nur für Analoge Werte nötig
+                if ($block->Type === 'A') { //Unit ist nur für Analoge Werte nötig
                     $var = IPS_GetVariable($vID);
                     $pName = $var['VariableProfile'];
                     if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX . '.') === 0) { //CustomProfile entspricht einem Modul-Profil
@@ -334,28 +314,27 @@ class JoTTACoE extends IPSModule {
                     $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
                 }
             } else { // nicht als Output definiert oder IPS-Variable nicht vorhanden
-                $discarded .= "$type$i, ";
+                $discarded .= "$block->Type$i, ";
             }
-            $strValues .= " | $type$i: " . $v . $units->{$u}->Suffix;
-            $values["$type$i"]['Value'] = $this->UnitConvertDecimals($v, $units->{$u}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
-            $values["$type$i"]['UnitID'] = $u;
+            $strValues .= " | $block->Type$i: " . floatval($v) . $units->{$u}->Suffix; //Werte immer als Zahl ausgeben (auch boolsche Werte)
+            $values["$block->Type$i"]['Value'] = $this->UnitConvertDecimals($v, $units->{$u}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
+            $values["$block->Type$i"]['UnitID'] = $u;
         }
         if (strlen($discarded) > 0) {
-            $this->SendDebug("SEND DATA ($strBlock) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
+            $this->SendDebug("SEND DATA ($block->Text) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
         }
-        $this->SendDebug("SEND DATA ($strBlock) -> Values", trim($strValues, ' |'), 0);
+        $this->SendDebug("SEND DATA ($block->Text) -> Values", trim($strValues, ' |'), 0);
 
         //Daten senden
         $data = '';
-        if ($type == 'A') { //Analoge Daten
+        if ($block->Type === 'A') { //Analoge Daten
             $data = pack('s4C4', ...array_column($values, 'Value'), ...array_column($values, 'UnitID')); //4x 16Bit Werte und 4x 8Bit UnitID
-        }
-        if ($type == 'D') { //Digitale Daten
+        } elseif ($block->Type === 'D') { //Digitale Daten
             $data = strrev(implode('', array_column($values, 'Value'))); //Umgekehrte Bit-Folge der Werte (16Bit)
             $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
         }
-        $this->SendDebug("SEND DATA ($strBlock) -> RAW", $data, 1);
-        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
+        $this->SendDebug("SEND DATA ($block->Text) -> RAW", $data, 1);
+        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block->Nr) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
         $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
         $this->SendDebug('SEND DATA -> JSONString', $data, 0);
         $response = @$this->SendDataToParent($data);
@@ -399,7 +378,7 @@ class JoTTACoE extends IPSModule {
         }
 
         //Ausgangs-Blöcke senden
-        $this->SendDebug('SendOutputs', implode(' | ', $outputs), 0);
+        $this->SendDebug('SendAllOutputs', implode(' | ', $outputs), 0);
         foreach ($send as $ident){
             $this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
         }
@@ -456,7 +435,7 @@ class JoTTACoE extends IPSModule {
             $this->ThrowMessage('Wrong BlockNr (%s) - has to be between 0-9', $BlockNr);
             return false;
         }
-        $text = "block $type$min-$type$max";
+        $text = "Block $type$min-$type$max";
         $idents = [];
         for ($i = $min; $i <= $max; $i++) { //Alle Idents desselben Blocks zusammenstellen
             $idents[] = $type.$i;
