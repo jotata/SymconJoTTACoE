@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   26.11.2021 15:50:52
+ * @Last Modified:   26.11.2021 18:49:06
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -120,9 +120,10 @@ class JoTTACoE extends IPSModule {
                     $this->DisableAction($c->Ident);
                 }
             }
-            //Ausgangs-Timer setzen
-            $this->SetTimerInterval('OutputTimer', $this->ReadPropertyInteger('OutputTimer') * 60 * 1000); //Konfiguration in Minuten zu Millisekunden
         }
+
+        //Ausgangs-Timer setzen
+        $this->SetTimerInterval('OutputTimer', $this->ReadPropertyInteger('OutputTimer') * 60 * 1000); //Konfiguration in Minuten zu Millisekunden
 
         //Status anpassen
         $this->SetStatus(self::STATUS_Ok_WaitingData);
@@ -269,7 +270,7 @@ class JoTTACoE extends IPSModule {
      */
     public function SendBits(int $BlockNr, string $Bits) {
         if (preg_match('/^[0-1]+$/', $Bits) === 0) { //nur 0 oder 1 erlaubt
-            $this->ThrowMessage('Bits (%s) contains wrong values. Has to be 0 or 1 each bit.', $Bits);
+            $this->ThrowMessage('Bits (%s) contains wrong values - has to be 0 or 1 each bit -> Stopping', $Bits);
             return false;
         }
         return $this->Send($BlockNr, str_split($Bits));
@@ -283,18 +284,24 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function Send(int $BlockNr, array $Values, array $UnitIDs = []) {
+        if ($this->HasActiveParent() === false) {
+            $this->SetStatus(self::STATUS_Error_FailedDependency);
+            $this->ThrowMessage('I/O-Instance not ready - check gateway -> Stopping', $BlockNr);
+            return false;
+        }
+
         //Gültigkeit der Parameter prüfen
         if ($BlockNr < 0 || $BlockNr > 9) { //Ungültige BlockNr
-            $this->ThrowMessage('Wrong BlockNr (%s) - has to be between 0-9', $BlockNr);
+            $this->ThrowMessage('Wrong BlockNr (%s) - has to be between 0-9 -> Stopping', $BlockNr);
             return false;
         }
         $block = $this->GetBlockInfoByNr($BlockNr);
         if (count($Values) !== $block->Size) { //falsche Anzahl Werte
-            $this->ThrowMessage('Count of Values (%1$u) does not match Block-Size (%2$u)', count($Values), $block->Size);
+            $this->ThrowMessage('Count of Values (%1$u) does not match Block-Size (%2$u) -> Stopping', count($Values), $block->Size);
             return false;
         }
         if (count($UnitIDs) > 0 && count($UnitIDs) !== $block->Size) { //falsche Anzahl UnitIDs
-            $this->ThrowMessage('Count of UnitIDs (%1$u) does not match Block-Size (%2$u)', count($UnitIDs), $block->Size);
+            $this->ThrowMessage('Count of UnitIDs (%1$u) does not match Block-Size (%2$u) -> Stopping', count($UnitIDs), $block->Size);
             return false;
         }
 
@@ -302,7 +309,7 @@ class JoTTACoE extends IPSModule {
         $units = json_decode($this->GetBuffer('Units'));
         $strValues = '';
         $strWrong = '';
-        for ($i = 0 ; $i < $block->Size; $i++) {
+        for ($i = 0; $i < $block->Size; $i++) {
             if (array_key_exists($i, $UnitIDs) === false) { //UnitID nicht definiert
                 $UnitIDs[$i] = 0; //Dimensionslos
             }
@@ -315,7 +322,7 @@ class JoTTACoE extends IPSModule {
                 $strWrong .= ', ' . $block->Idents[$i];
             }
         }
-        $this->SendDebug("SEND DATA ($block->Text) -> Values", trim($strValues, ' |'), 0);
+        $this->SendDebug("SEND Data ($block->Text) -> Values", trim($strValues, ' |'), 0);
         if ($strWrong !== '') { //ungültige Werte erkannt
             $this->ThrowMessage('Wrong value(s) for %s -> Stopping', trim($strWrong, ' ,'));
             return false;
@@ -329,10 +336,10 @@ class JoTTACoE extends IPSModule {
             $data = strrev(implode('', $Values)); //Umgekehrte Bit-Folge der Werte (16Bit)
             $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
         }
-        $this->SendDebug("SEND DATA ($block->Text) -> RAW", $data, 1);
+        $this->SendDebug("SEND Data ($block->Text) -> RAW", $data, 1);
         $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block->Nr) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
         $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*Erweitert (Socket) TX GUID*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
-        $this->SendDebug('SEND DATA -> JSONString', $data, 0);
+        $this->SendDebug("SEND Data ($block->Text) -> JSONString", $data, 0);
         $response = @$this->SendDataToParent($data);
 
         //Antwort UDP-Socket auswerten
@@ -352,17 +359,17 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function SendAllOutputs() {
+        $this->SendDebug('SEND all Outputs', 'Running...', 0);
+
         //Alle Ausgänge ermitteln und in Blöcken zusmmenfassen
-        $outputs = [];
         $send = [];
         for ($i = 0; $i < 10; $i++) { //Alle möglichen Blöcke (0-9) durchlaufen
-            $block= $this->GetBlockInfoByNr($i);
-            $sent = false; 
+            $block = $this->GetBlockInfoByNr($i);
+            $sent = false;
             foreach ($block->Idents as $idt) {
                 if ($block->Config[$idt] > 2) { //Output oder Input/Output
-                    $outputs[] = $idt;
                     if ($sent === false) { //Block wird noch nicht gesendet (wenn Block gesendet wird, gehen alle Idents innerhalb des Blocks mit)
-                        $send[] = $idt;
+                        $send[$block->Nr] = $this->GetBlockValuesFromInstance($block);
                         $sent = true;
                     }
                 }
@@ -370,10 +377,46 @@ class JoTTACoE extends IPSModule {
         }
 
         //Ausgangs-Blöcke senden
-        $this->SendDebug('SendAllOutputs', implode(' | ', $outputs), 0);
-        foreach ($send as $ident) {
-            //$this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
+        foreach ($send as $blockNr => $values) {
+            $this->Send($blockNr, array_column($values, 'Value'), array_column($values, 'UnitID'));
         }
+        $this->SendDebug('SEND all Outputs', 'Done', 0);
+    }
+
+    /**
+     * Liest alle Werte / UnitIDs eines Blocks aus den Instanz-Variablen aus.
+     * Ist eine Instanz-Variable des Blocks nicht aktiv / als Ausgang konfiguriert, wird dafür 0 zurückgegeben.
+     * @param object $Block Objekt welches durch $this->GetBlockInfoBy... generiert wird.
+     * @return array mit Value & UnitID pro Instanz-Variable, wobei der Key dem Ident der Instanz-Variable entspricht
+     * @access public
+     */
+    private function GetBlockValuesFromInstance(object $Block) {
+        $values = [];
+        $discarded = '';
+        foreach ($Block->Idents as $idt) { //Daten des ganzen Blocks ermitteln.
+            $v = 0; //Value
+            $u = 0; //UnitID
+            $vID = @$this->GetIDForIdent($idt);
+            if ($Block->Config[$idt] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
+                $v = $this->GetValue($idt);
+                if ($Block->Type === 'A') { //UnitID ist nur für Analoge Werte nötig
+                    $var = IPS_GetVariable($vID);
+                    $pName = $var['VariableProfile'];
+                    if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX . '.') === 0) { //CustomProfile entspricht einem Modul-Profil
+                        $pName = $var['VariableCustomProfile'];
+                    }
+                    $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
+                }
+            } else { // nicht als Output definiert oder IPS-Variable nicht vorhanden
+                $discarded .= "$idt, ";
+            }
+            $values[$idt]['Value'] = $v;
+            $values[$idt]['UnitID'] = $u;
+        }
+        if (strlen($discarded) > 0) {
+            $this->SendDebug("SEND Prepare ($Block->Text) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
+        }
+        return $values;
     }
 
     /**
@@ -385,71 +428,20 @@ class JoTTACoE extends IPSModule {
      * @access private
      */
     private function RequestVariableAction(string $Ident, $Value) {
-        if ($this->HasActiveParent() === false) {
-            $this->SetStatus(self::STATUS_Error_FailedDependency);
-            return false;
-        }
+        $this->SendDebug('SEND Instance-Variable changed', "Ident: $Ident - Value: " . floatval($Value) . ' - Running...', 0);
 
         //Block-Informationen definieren
         $block = $this->GetBlockInfoByIdent($Ident);
+        $values = $this->GetBlockValuesFromInstance($block); //Werte des ganzen Blocks ermitteln
+        $values[$Ident]['Value'] = $Value; //Neuen Wert in Block aktualisieren
 
-        //Werte des ganzen Blocks von IPS auslesen
-        $units = json_decode($this->GetBuffer('Units'));
-        $values = [];
-        $strValues = '';
-        $discarded = '';
-        foreach ($block->Idents as $idt) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
-            $v = 0; //Value
-            $u = 0; //UnitID
-            $vID = @$this->GetIDForIdent($idt);
-            if ($block->Config[$idt] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
-                if ($idt === $Ident) { //neuen Wert übernehmen
-                    $v = $Value;
-                } else { //Wert von IPS-Variable auslesen
-                    $v = $this->GetValue($idt);
-                }
-                if ($block->Type === 'A') { //Unit ist nur für Analoge Werte nötig
-                    $var = IPS_GetVariable($vID);
-                    $pName = $var['VariableProfile'];
-                    if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX . '.') === 0) { //CustomProfile entspricht einem Modul-Profil
-                        $pName = $var['VariableCustomProfile'];
-                    }
-                    $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
-                }
-            } else { // nicht als Output definiert oder IPS-Variable nicht vorhanden
-                $discarded .= "$idt, ";
-            }
-            $strValues .= " | $idt: " . floatval($v) . $units->{$u}->Suffix; //Werte immer als Zahl ausgeben (auch boolsche Werte)
-            $values[$idt]['Value'] = $this->UnitConvertDecimals($v, $units->{$u}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
-            $values[$idt]['UnitID'] = $u;
-        }
-        if (strlen($discarded) > 0) {
-            $this->SendDebug("SEND DATA ($block->Text) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
-        }
-        $this->SendDebug("SEND DATA ($block->Text) -> Values", trim($strValues, ' |'), 0);
-
-        //Daten senden
-        $data = '';
-        if ($block->Type === 'A') { //Analoge Daten
-            $data = pack('s4C4', ...array_column($values, 'Value'), ...array_column($values, 'UnitID')); //4x 16Bit Werte und 4x 8Bit UnitID
-        } elseif ($block->Type === 'D') { //Digitale Daten
-            $data = strrev(implode('', array_column($values, 'Value'))); //Umgekehrte Bit-Folge der Werte (16Bit)
-            $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
-        }
-        $this->SendDebug("SEND DATA ($block->Text) -> RAW", $data, 1);
-        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block->Nr) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
-        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*UDP-Socket*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
-        $this->SendDebug('SEND DATA -> JSONString', $data, 0);
-        $response = @$this->SendDataToParent($data);
-
-        //Antwort UDP-Socket auswerten
+        //Daten senden & Antwort auswerten
+        $response = $this->Send($block->Nr, array_column($values, 'Value'), array_column($values, 'UnitID'));
         if ($response !== false) { //kein Fehler seitens IPS
-            if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
-                $this->SetStatus(self::STATUS_Ok_InstanceActive);
-            }
             if ($block->Config[$Ident] < 4) { //UDP sendet keine Antwort zurück, wenn Variable jedoch ein Input/Output ist, müsste die CMI den neuen Wert zurückmelden.
                 $this->SetValue($Ident, $Value);
             }
+            $this->SendDebug('SEND Instance-Variable changed', 'Done', 0);
             return true;
         }
         $this->SetStatus(self::STATUS_Error_FailedDependency);
@@ -517,7 +509,7 @@ class JoTTACoE extends IPSModule {
             $idents[] = $type . $i;
             $config[$type . $i] = $conf[$type . $i]; //Nur Config der Idents aus dem Block übernehmen
         }
-        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Size' => ($max-$min + 1), 'Text' => $text, 'Idents' => $idents, 'Config' => $config];
+        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Size' => ($max - $min + 1), 'Text' => $text, 'Idents' => $idents, 'Config' => $config];
     }
 
     /**
