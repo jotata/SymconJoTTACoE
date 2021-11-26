@@ -190,7 +190,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   - Modul-Informationen hinzugefügt.
   - Instanz-Funktion / Timer zum Senden aller Outputs hinzugefügt (verhindert Timeout auf Reglern).
   - Instanz-Funktion zum Senden von Bits hinzugefügt.
-  - Instanz-Funktion zum senden von ganzen Blöcken hinzugefügt.
+  - Instanz-Funktion zum Senden von ganzen Blöcken hinzugefügt.
   - Sende-Prozess optimiert.
   
   Version 0.2 (BETA):
