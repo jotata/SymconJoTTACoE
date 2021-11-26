@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   25.11.2021 19:25:33
+ * @Last Modified:   26.11.2021 10:44:11
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -121,7 +121,7 @@ class JoTTACoE extends IPSModule {
                 }
             }
             //Ausgangs-Timer setzen
-            $this->SetTimerInterval('OutputTimer', $this->ReadPropertyInteger('OutputTimer') * 60 * 1000);
+            $this->SetTimerInterval('OutputTimer', $this->ReadPropertyInteger('OutputTimer') * 60 * 1000); //Konfiguration in Minuten zu Millisekunden
         }
 
         //Status anpassen
@@ -243,12 +243,10 @@ class JoTTACoE extends IPSModule {
         //Values in Instanz-Variablen schreiben
         $strValues = '';
         $discarded = '';
-        $config = array_merge(json_decode($this->ReadPropertyString('Analog')), json_decode($this->ReadPropertyString('Digital')));
-        $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
         foreach ($values as $ident => $value) {
             $strValues .= " | $ident: " . $value['Value'] . $units->{$value['UnitID']}->Suffix;
             $vID = @$this->GetIDForIdent($ident);
-            if ($vID === false || ($config[$ident] !== 2 && $config[$ident] !== 4)) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
+            if ($vID === false || ($block->Config[$ident] !== 2 && $block->Config[$ident] !== 4)) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
                 $discarded .= ", $ident";
             } else { //Variable aktualisieren
                 $this->SetValue($ident, $value['Value']);
@@ -314,27 +312,21 @@ class JoTTACoE extends IPSModule {
 
         //Block-Informationen definieren
         $block = $this->GetBlockInfoByIdent($Ident);
-        if ($block->Type === 'A') { //Analoge Daten
-            $config = json_decode($this->ReadPropertyString('Analog'));
-        } elseif ($block->Type === 'D') { //Digitale Daten
-            $config = json_decode($this->ReadPropertyString('Digital'));
-        }
 
         //Werte des ganzen Blocks von IPS auslesen
         $units = json_decode($this->GetBuffer('Units'));
         $values = [];
         $strValues = '';
         $discarded = '';
-        $config = array_combine(array_column($config, 'Ident'), array_column($config, 'Config'));
-        for ($i = $block->Min; $i <= $block->Max; $i++) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
-            $v = 0;
-            $u = 0;
-            $vID = @$this->GetIDForIdent("$block->Type$i");
-            if ($config["$block->Type$i"] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
-                if ("$block->Type$i" == $Ident) { //neuen Wert übernehmen
+        foreach ($block->Idents as $idt) { //Daten des ganzen Blocks ermitteln. Es müssen immer 4 (Analog) oder 16 (Digital) Werte miteinander gesendet werden
+            $v = 0; //Value
+            $u = 0; //UnitID
+            $vID = @$this->GetIDForIdent($idt);
+            if ($block->Config[$idt] > 2 && $vID !== false) { //Als Output definiert & IPS-Variable vorhanden
+                if ($idt === $Ident) { //neuen Wert übernehmen
                     $v = $Value;
                 } else { //Wert von IPS-Variable auslesen
-                    $v = $this->GetValue("$block->Type$i");
+                    $v = $this->GetValue($idt);
                 }
                 if ($block->Type === 'A') { //Unit ist nur für Analoge Werte nötig
                     $var = IPS_GetVariable($vID);
@@ -345,11 +337,11 @@ class JoTTACoE extends IPSModule {
                     $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
                 }
             } else { // nicht als Output definiert oder IPS-Variable nicht vorhanden
-                $discarded .= "$block->Type$i, ";
+                $discarded .= "$idt, ";
             }
-            $strValues .= " | $block->Type$i: " . floatval($v) . $units->{$u}->Suffix; //Werte immer als Zahl ausgeben (auch boolsche Werte)
-            $values["$block->Type$i"]['Value'] = $this->UnitConvertDecimals($v, $units->{$u}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
-            $values["$block->Type$i"]['UnitID'] = $u;
+            $strValues .= " | $idt: " . floatval($v) . $units->{$u}->Suffix; //Werte immer als Zahl ausgeben (auch boolsche Werte)
+            $values[$idt]['Value'] = $this->UnitConvertDecimals($v, $units->{$u}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma;
+            $values[$idt]['UnitID'] = $u;
         }
         if (strlen($discarded) > 0) {
             $this->SendDebug("SEND DATA ($block->Text) -> Skipped", 'Variable(s) not active/ouput: ' . trim($discarded, ', '), 0);
@@ -375,7 +367,7 @@ class JoTTACoE extends IPSModule {
             if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
                 $this->SetStatus(self::STATUS_Ok_InstanceActive);
             }
-            if ($config[$Ident] < 4) { //UDP sendet keine Antwort zurück, wenn Variable jedoch ein Input/Output ist, müsste die CMI den neuen Wert zurückmelden.
+            if ($block->Config[$Ident] < 4) { //UDP sendet keine Antwort zurück, wenn Variable jedoch ein Input/Output ist, müsste die CMI den neuen Wert zurückmelden.
                 $this->SetValue($Ident, $Value);
             }
             return true;
@@ -387,7 +379,7 @@ class JoTTACoE extends IPSModule {
     /**
      * Gibt alle Block-Informationen basierend auf dem Variblen-Ident zurück.
      * @param string $Ident einer Instanz-Variable
-     * @return stdObj mit Type, Nr, Min, Max, Text, Idents des Blocks oder false bei ungültigem Ident
+     * @return stdObj mit Type, Nr, Min, Max, Text, Idents, Config des Blocks oder false bei ungültigem Ident
      * @access private
      */
     private function GetBlockInfoByIdent(string $Ident) {
@@ -415,7 +407,7 @@ class JoTTACoE extends IPSModule {
     /**
      * Gibt alle Block-Informationen basierend auf der BlockNr zurück.
      * @param int $BlockNr zwischen 0-9
-     * @return stdObj mit Type, Nr, Min, Max, Text, Idents des Blocks oder false bei ungültiger BlockNr
+     * @return stdObj mit Type, Nr, Min, Max, Text, Idents, Config des Blocks oder false bei ungültiger BlockNr
      * @access private
      */
     private function GetBlockInfoByNr(int $BlockNr) {
@@ -427,20 +419,25 @@ class JoTTACoE extends IPSModule {
                 $min = 17; //erste ID von Block 9
             }
             $max = $min + 15; //Digital immer 16 Werte pro Block
+            $conf = json_decode($this->ReadPropertyString('Digital'));
         } elseif ($BlockNr > 0 && $BlockNr < 9) { //Analog
             $type = 'A';
             $min = (($BlockNr - 1) * 4 + 1); //Erste ID des Blocks berechnen
             $max = $min + 3; //Letzte Nr des Blocks berechnen
+            $conf = json_decode($this->ReadPropertyString('Analog'));
         } else { //ungültige BlockNr
             $this->ThrowMessage('Wrong BlockNr (%s) - has to be between 0-9', $BlockNr);
             return false;
         }
         $text = "Block $type$min-$type$max";
+        $conf = array_combine(array_column($conf, 'Ident'), array_column($conf, 'Config'));
+        $config = [];
         $idents = [];
         for ($i = $min; $i <= $max; $i++) { //Alle Idents desselben Blocks zusammenstellen
             $idents[] = $type . $i;
+            $config[$type . $i] = $conf[$type . $i]; //Nur Config der Idents aus dem Block übernehmen
         }
-        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Text' => $text, 'Idents' => $idents];
+        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Text' => $text, 'Idents' => $idents, 'Config' => $config];
     }
 
     /**
