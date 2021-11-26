@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   26.11.2021 11:01:16
+ * @Last Modified:   26.11.2021 15:50:52
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -261,8 +261,89 @@ class JoTTACoE extends IPSModule {
         }
     }
 
-    public function Send(string $Text, string $ClientIP, int $ClientPort) {
-        $this->SendDataToParent(json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}', 'ClientIP' => $ClientIP, 'ClientPort' => $ClientPort, 'Buffer' => $Text]));
+    /**
+     * Sendet einen Daten-Block basierend auf einem Bit-String an die CMI.
+     * @param int $BlockNr des Datenpakets
+     * @param string $Bits
+     * @access public
+     */
+    public function SendBits(int $BlockNr, string $Bits) {
+        if (preg_match('/^[0-1]+$/', $Bits) === 0) { //nur 0 oder 1 erlaubt
+            $this->ThrowMessage('Bits (%s) contains wrong values. Has to be 0 or 1 each bit.', $Bits);
+            return false;
+        }
+        return $this->Send($BlockNr, str_split($Bits));
+    }
+
+    /**
+     * Sendet einen ganzen Daten-Block an die CMI.
+     * @param int $BlockNr des Datenpakets
+     * @param array $Values mit einem Wert pro Ausgang
+     * @param optional array $UnitIDs mit einer UnitID pro Ausgang
+     * @access public
+     */
+    public function Send(int $BlockNr, array $Values, array $UnitIDs = []) {
+        //Gültigkeit der Parameter prüfen
+        if ($BlockNr < 0 || $BlockNr > 9) { //Ungültige BlockNr
+            $this->ThrowMessage('Wrong BlockNr (%s) - has to be between 0-9', $BlockNr);
+            return false;
+        }
+        $block = $this->GetBlockInfoByNr($BlockNr);
+        if (count($Values) !== $block->Size) { //falsche Anzahl Werte
+            $this->ThrowMessage('Count of Values (%1$u) does not match Block-Size (%2$u)', count($Values), $block->Size);
+            return false;
+        }
+        if (count($UnitIDs) > 0 && count($UnitIDs) !== $block->Size) { //falsche Anzahl UnitIDs
+            $this->ThrowMessage('Count of UnitIDs (%1$u) does not match Block-Size (%2$u)', count($UnitIDs), $block->Size);
+            return false;
+        }
+
+        //Daten prüfen/konvertieren
+        $units = json_decode($this->GetBuffer('Units'));
+        $strValues = '';
+        $strWrong = '';
+        for ($i = 0 ; $i < $block->Size; $i++) {
+            if (array_key_exists($i, $UnitIDs) === false) { //UnitID nicht definiert
+                $UnitIDs[$i] = 0; //Dimensionslos
+            }
+            if (($block->Type === 'D' && $Values[$i] != 0 && $Values[$i] != 1)) { //ungültiger (digitaler) Wert
+                $strWrong .= ', ' . $block->Idents[$i];
+            }
+            $strValues .= ' | ' . $block->Idents[$i] . ': ' . floatval($Values[$i]) . $units->{$UnitIDs[$i]}->Suffix; //Werte immer als Zahl ausgeben (auch boolsche Werte)
+            $Values[$i] = $this->UnitConvertDecimals($Values[$i], $units->{$UnitIDs[$i]}->Decimals, 0); //CoE überträgt analoge Werte immer als Ganzzahl (16Bit) ohne Komma
+            if ($block->Type === 'A' && ($Values[$i] < -32767 || $Values[$i] > 32767)) { //ungültiger analoger Wert
+                $strWrong .= ', ' . $block->Idents[$i];
+            }
+        }
+        $this->SendDebug("SEND DATA ($block->Text) -> Values", trim($strValues, ' |'), 0);
+        if ($strWrong !== '') { //ungültige Werte erkannt
+            $this->ThrowMessage('Wrong value(s) for %s -> Stopping', trim($strWrong, ' ,'));
+            return false;
+        }
+
+        //Daten senden
+        $data = '';
+        if ($block->Type === 'A') { //Analoge Daten
+            $data = pack('s4C4', ...$Values, ...$UnitIDs); //4x 16Bit Werte und 4x 8Bit UnitID
+        } elseif ($block->Type === 'D') { //Digitale Daten
+            $data = strrev(implode('', $Values)); //Umgekehrte Bit-Folge der Werte (16Bit)
+            $data = pack('vx10', base_convert($data, 2, 10)); //Bit-Folge in Ganzzahl umwandeln und als 16Bit Little-Endian + 10 NUL verpacken
+        }
+        $this->SendDebug("SEND DATA ($block->Text) -> RAW", $data, 1);
+        $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block->Nr) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
+        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*Erweitert (Socket) TX GUID*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
+        $this->SendDebug('SEND DATA -> JSONString', $data, 0);
+        $response = @$this->SendDataToParent($data);
+
+        //Antwort UDP-Socket auswerten
+        if ($response === false) { //Fehler seitens IPS
+            $this->SetStatus(self::STATUS_Error_FailedDependency);
+            return false;
+        }
+        if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
+            $this->SetStatus(self::STATUS_Ok_InstanceActive);
+        }
+        return true;
     }
 
     /**
@@ -291,7 +372,7 @@ class JoTTACoE extends IPSModule {
         //Ausgangs-Blöcke senden
         $this->SendDebug('SendAllOutputs', implode(' | ', $outputs), 0);
         foreach ($send as $ident) {
-            $this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
+            //$this->RequestVariableAction($ident, $this->GetValue($ident)); //Sollte nur senden sein, da sonst Zeitstempel immer aktualisiert wird
         }
     }
 
@@ -378,7 +459,7 @@ class JoTTACoE extends IPSModule {
     /**
      * Gibt alle Block-Informationen basierend auf dem Variblen-Ident zurück.
      * @param string $Ident einer Instanz-Variable
-     * @return stdObj mit Type, Nr, Min, Max, Text, Idents, Config des Blocks oder false bei ungültigem Ident
+     * @return stdObj mit Type, Nr, Min, Max, Size, Text, Idents, Config des Blocks oder false bei ungültigem Ident
      * @access private
      */
     private function GetBlockInfoByIdent(string $Ident) {
@@ -406,7 +487,7 @@ class JoTTACoE extends IPSModule {
     /**
      * Gibt alle Block-Informationen basierend auf der BlockNr zurück.
      * @param int $BlockNr zwischen 0-9
-     * @return stdObj mit Type, Nr, Min, Max, Text, Idents, Config des Blocks oder false bei ungültiger BlockNr
+     * @return stdObj mit Type, Nr, Min, Max, Size, Text, Idents, Config des Blocks oder false bei ungültiger BlockNr
      * @access private
      */
     private function GetBlockInfoByNr(int $BlockNr) {
@@ -436,7 +517,7 @@ class JoTTACoE extends IPSModule {
             $idents[] = $type . $i;
             $config[$type . $i] = $conf[$type . $i]; //Nur Config der Idents aus dem Block übernehmen
         }
-        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Text' => $text, 'Idents' => $idents, 'Config' => $config];
+        return (object) ['Type' => $type, 'Nr' => $BlockNr, 'Min' => $min, 'Max' => $max, 'Size' => ($max-$min + 1), 'Text' => $text, 'Idents' => $idents, 'Config' => $config];
     }
 
     /**

@@ -38,7 +38,7 @@ Es ist auch möglich, das Modul in Kombination mit dem in IPS integrierten Modul
  - IPS 6.0 oder höher  
  - CMI von Technische Alternative
  - Für den Empfang via CoE müssen die CoE-Ausgänge auf der CMI entsprechend konfiguriert werden.
- - Zum Senden via CoE müssen die entsprechenden CAN-Eingänge auf dem Endgerät konfiguriert werden.
+ - Zum Senden via CoE müssen die entsprechenden CAN-Eingänge auf dem Regler konfiguriert werden.
 
 ## 3. Unterstütze Geräte
 Das Modul wird grundsätzlich für eine UVR16x2 programmiert / getestet. Da die CMI von Technische Alternative aber alle Werte (CAN-Bus, DL-Bus, ModBus, SMS) via CoE zur Verfügung stellen kann, ist auch die Steuerung anderer Geräte am CAN-Bus und der Empfang von Daten der anderen CMI-Eingänge möglich. 
@@ -73,22 +73,22 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   - **IP-Adresse:** IP-Adresse der CMI
   - **Empfange alle Daten:** Wird diese Option aktiviert, hört die Instanz auf alle Daten, welche via UDP Port 5441 an IPS gesendet werden (praktisch um im Debug-Log zu sehen, was die CMI alles sendet). Sonst hört die Instanz nur auf Daten von *IP-Adresse* und *Empfange von Knoten-Nr*. Diese Option sollte im produktiven Betrieb deaktiviert werden, da sonst mehrere CMIs in dieselben Variablen schreiben können.
   - **Empfange von Knoten-Nr:** Eine beliebige Zahl zwischen 0 (= Empfang deaktiviert) und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein. Die gleiche Knoten-Nr muss in der CMI auf den CoE-Ausgängen angegeben werden.
-  - **Eigene Knoten-Nr:** Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Endgeräte angegeben werden.
+  - **Eigene Knoten-Nr:** Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Reglere angegeben werden.
   - Analoge / Digitale Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten):
-    - **Ident:** Eindeutiger Name (Ident) der Variable innerhalb jeder Modul-Instanz. Diese Nr (ohne den Buchstaben) wird für den Netzwerkausgang (CoE-Ausgang auf der CMI) oder die Ausgangsnummer (CAN-Eingang auf Endgerät) angegeben.
+    - **Ident:** Eindeutiger Name (Ident) der Variable innerhalb jeder Modul-Instanz. Diese Nr (ohne den Buchstaben) wird für den Netzwerkausgang (CoE-Ausgang auf der CMI) oder die Ausgangsnummer (CAN-Eingang auf Regler) angegeben.
     - **Name:** Entspricht dem Namen der Instanz-Variable in IPS (kann nur über die Eigenschaften der Variable im IPS-Objektbaum geändert werden).
     - **Variable:** Definiert einen der folgenden Zustände der Instanz-Variable:
       - **Deaktiviert:** Instanz-Variable wird nicht erstellt / verwendet und empfängt auch keine Werte.
       - **Aktiviert:** Instanz-Variable wird erstellt, empfängt / sendet aber keine Werte (Kann genutzt werden um die Variable temporär zu deaktivieren, ohne diese zu löschen. So bleibt die Objekt-ID erhalten.)
       - **Eingang:** Instanz-Variable wird erstellt und empfängt Werte vom entsprechenden CoE-Netzwerkausgang.
       - **Ausgang:** Instanz-Variable wird erstellt und kann Werte an den entsprechenden CAN-Ausgang senden. Der Wert wird nach dem Senden sofort in die Variable geschrieben, auch wenn er ev. auf dem CAN-Bus niergends empfangen wurde (CoE kennt keine Quittierung).
-      - **Eingang / Ausgang:** Instanz-Variable wird erstellt und kann Werte senden & empfangen. Beim Senden wird der Wert jedoch nicht automatisch in die Variable geschrieben, sonder erst wenn dieser via CoE wieder empfangen wird (dazu muss eine entsprechende Empfangs-Quittierung auf dem Endgerät programmiert werden).
+      - **Eingang / Ausgang:** Instanz-Variable wird erstellt und kann Werte senden & empfangen. Beim Senden wird der Wert jedoch nicht automatisch in die Variable geschrieben, sonder erst wenn dieser via CoE wieder empfangen wird (dazu muss eine entsprechende Empfangs-Quittierung auf dem Regler programmiert werden).
 
-  ### 3. Konfiguration Datenübertragung Endgerät zu CMI (CAN-Ausgänge)
-  Damit die CMI Werte von einem Endgerät per CoE an IPS übertragen kann, müssen diese vom jeweiligen Endgerät zuerst auf den CAN-Bus übertragen (CAN-Ausgang) und von der CMI eingelesen (CAN-Eingang) werden.
+  ### 3. Konfiguration Datenübertragung Regler zu CMI (CAN-Ausgänge)
+  Damit die CMI Werte von einem Regler per CoE an IPS übertragen kann, müssen diese vom jeweiligen Regler zuerst auf den CAN-Bus übertragen (CAN-Ausgang) und von der CMI eingelesen (CAN-Eingang) werden.
   Die hierzu verwendeten Konfigurations-Parameter (Knoten, Ausgangsnummer) können uanbhängig von den Einstellungen in der Instanz definiert werden. Der Übersicht halber empfiehlt es sich jedoch, hier jeweils die gleichen Nr zu verwenden.
   
-  Details zur Konfiguration der CAN-Ausgänge auf den Endgeräten und wie diese auf der CMI empfangen werden, sind in den Handbüchern von Technische Alternative zu finden.
+  Details zur Konfiguration der CAN-Ausgänge auf den Reglern und wie diese auf der CMI empfangen werden, sind in den Handbüchern von Technische Alternative zu finden.
 
   ### 4. Konfiguration Datenübertragung CMI zu IPS (CoE-Ausgänge)
   Alle verfügbaren Werte auf einer CMI (CAN-Bus, DL-Bus, ModBus, SMS) können per CoE an IP-Symcon übermittelt werden. Pro Wert muss jeweils auf der CMI eine Konfiguration (Einstellungen -> Ausgänge -> CoE) erstellt werden:
@@ -101,19 +101,22 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   Die CMI übermittelt per CoE auch die Messgrösse, welche auf dem Eingang eingestellt ist. Die Instanz wertet diese aus und passt das Variablen-Profil entsprechend an. Wenn auf der Variable ein eigenes Profil definiert wird, zeigt IPS die Einheit des eigenen Profils an.
 
-  ### 5. Konfiguration Datenübertragung IPS zu CMI/Endgerät (CAN-Eingänge)
-  Alle Werte, der als Ausgang definierten Instanz-Variablen, können per CoE an ein Endgerät, welches per CAN-Bus mit der CMI verbunden ist, übertragen werden. Dabei dient die CMI als transparenter Gateway zwischen IPS und Endgerät und sendet alle, per CoE empfangenen, Daten direkt an den CAN-Bus weiter. Daher muss der jeweilige CAN-Eingang nur auf dem Endgerät konfiguriert werden. Dazu wird auf dem Engerät als Knoten der Wert von *Eigene Knoten-Nr* der Modul-Instanz und als Ausgangsnummer die Nr *#* der entsprechenden Instanz-Variable angegeben.
+  ### 5. Konfiguration Datenübertragung IPS zu CMI/Regler (CAN-Eingänge)
+  Alle Werte, der als Ausgang definierten Instanz-Variablen, können per CoE an einen Regler, welches per CAN-Bus mit der CMI verbunden ist, übertragen werden. Dabei dient die CMI als transparenter Gateway zwischen IPS und Regler und sendet alle, per CoE empfangenen, Daten direkt an den CAN-Bus weiter. Daher muss der jeweilige CAN-Eingang nur auf dem Regler konfiguriert werden. Dazu wird auf dem Engerät als Knoten der Wert von *Eigene Knoten-Nr* der Modul-Instanz und als Ausgangsnummer die Nr *#* der entsprechenden Instanz-Variable angegeben.
   
-  Details zur Konfiguration der CAN-Eingänge auf den Endgeräten, sind in den Handbüchern von Technische Alternative zu finden.
+  Details zur Konfiguration der CAN-Eingänge auf den Reglern, sind in den Handbüchern von Technische Alternative zu finden.
 
-  Wenn auf der IPS-Variable ein Variablen-Profil des Modules (beginnt mit JoTTACoE) konfiguriert ist, wird die entsprechende Einheit ebenfalls per CoE übertragen und auf dem Endgerät ausgewertet, wenn dort die Messgrösse auf automatisch gestellt ist.
+  Wenn auf der IPS-Variable ein Variablen-Profil des Modules (beginnt mit JoTTACoE) konfiguriert ist, wird die entsprechende Einheit ebenfalls per CoE übertragen und auf dem Regler ausgewertet, wenn dort die Messgrösse auf automatisch gestellt ist.
 
-  Da die CMI nur als Gateway funktioniert, ist es nicht möglich, Werte von IPS direkt an einen CAN-Eingang der CMI zu senden. Dazu müsste man den Wert an ein Endgerät senden und von dort per Programmierung wieder zurück auf einen CAN-Ausgang, welcher wiederum von der CMI eingelesen wird...
+  Da die CMI nur als Gateway funktioniert, ist es nicht möglich, Werte von IPS direkt an einen CAN-Eingang der CMI zu senden. Dazu müsste man den Wert an einen Regler senden und von dort per Programmierung wieder zurück auf einen CAN-Ausgang, welcher wiederum von der CMI eingelesen wird...
 
   ### 3. Modul-Funktionen
   Die folgenden Funktionen stehen in IPS-Ereignissen/-Scripts zur Verfügung:
-  - **IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value):** steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI.
-  - **JOTTACoE_SendAllOutputs(int $InstanzID):** sendet alle aktiven Ausgangs-Variablen an die CMI/Regler.
+  - **IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value):** Steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI/Regler.
+  - **JOTTACoE_SendAllOutputs(int $InstanzID):** Sendet alle aktiven Ausgangs-Variablen an die CMI/Regler.
+  - **JOTTACoE_SendBits(int $InstanzID, int $BlockNr, string $Bits):** Sendet alle Werte aus $Bits als Datenblock an die CMI/Regler. In $Bits entspricht jede Zahl (0 oder 1) einem Ausgang (1. Zahl = 1. Netzwerkausgang des Blocks).*
+  - **JOTTACoE_Send(int $InstanzID, int $BlockNr, array $Values, array $UnitIDs = []):** Sendet einen Datenblock ($BlockNr) mit den Werten $Values und optional mit den Messgrössen ($UnitIDs) an die CMI/Regler. Dabei entsprechen $Values[0] / $UnitIDs[0] immer Wert / Messgrösse des ersten Netzwerkausganges vom Block.*
+  *) Details zu BlockNr und Netzwerkausgang siehe [Datenblock](E#1-coe-datenbl%C3%B6cke).
 
   ### 5. Fehlersuche
   Die Debug-Funktion der Instanz liefert detaillierte Informationen über empfangenen / gesendeten Daten und die genutzen Datenblöcke. Auch verworfene Werte werden hier ausgegeben.
@@ -171,7 +174,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Version 0.3 (BETA):
   - Fix: ReceiveDataFilter korrigiert, so dass auch Daten von Nodes 11, 14-31 empfangen werden.
   - Modul-Informationen hinzugefügt.
-  - Instanz-Funktion / Timer zum senden aller Outputs hinzugefügt (verhindert Timeout auf Reglern).
+  - Instanz-Funktion / Timer zum Senden aller Outputs hinzugefügt (verhindert Timeout auf Reglern).
   
   Version 0.2 (BETA):
   - Dokumentation aktualisiert
