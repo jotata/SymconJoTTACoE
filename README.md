@@ -112,10 +112,10 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 3. Modul-Funktionen
   Die folgenden Funktionen stehen in IPS-Ereignissen/-Scripts zur Verfügung:
-  - **IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value):** Steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI/Regler.
-  - **JOTTACoE_SendAllOutputs(int $InstanzID):** Sendet alle aktiven Ausgangs-Variablen an die CMI/Regler.
-  - **JOTTACoE_SendBits(int $InstanzID, int $BlockNr, string $Bits):** Sendet alle Werte aus $Bits als Datenblock an die CMI/Regler. In $Bits entspricht jede Zahl (0 oder 1) einem Ausgang (1. Zahl = 1. Netzwerkausgang des Blocks).*
-  - **JOTTACoE_Send(int $InstanzID, int $BlockNr, array $Values, array $UnitIDs = []):** Sendet einen Datenblock ($BlockNr) mit den Werten $Values und optional mit den Messgrössen ($UnitIDs) an die CMI/Regler. Dabei entsprechen $Values[0] / $UnitIDs[0] immer Wert / Messgrösse des ersten Netzwerkausganges vom Block.*
+  - `IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value)` Steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI/Regler.
+  - `JOTTACoE_SendAllOutputs(int $InstanzID)` Sendet alle aktiven Ausgangs-Variablen an die CMI/Regler.
+  - `JOTTACoE_SendBits(int $InstanzID, int $BlockNr, string $Bits)` Sendet alle Werte aus $Bits als Datenblock an die CMI/Regler. In $Bits entspricht jede Zahl (0 oder 1) einem Ausgang (1. Zahl = 1. Netzwerkausgang des Blocks).*
+  - `JOTTACoE_Send(int $InstanzID, int $BlockNr, array $Values, array $UnitIDs = [])` Sendet einen Datenblock ($BlockNr) mit den Werten $Values und optional mit den Messgrössen ($UnitIDs) an die CMI/Regler. Dabei entsprechen $Values[0] / $UnitIDs[0] immer Wert / Messgrösse des ersten Netzwerkausganges vom Block. Die UnitID kann im Profilmanager (Float) den Profilen des Modules entnommen werden (Bsp.: JoTTACoE.Dollar.*51* => UnitID = *51*). Wird keine UnitID angegeben, erfolgt die Übertragung *dimensionslos*.*
   *) Details zu BlockNr und Netzwerkausgang siehe [Datenblock](E#1-coe-datenbl%C3%B6cke).
 
   ### 5. Fehlersuche
