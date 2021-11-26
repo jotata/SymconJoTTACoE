@@ -175,6 +175,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   - Fix: ReceiveDataFilter korrigiert, so dass auch Daten von Nodes 11, 14-31 empfangen werden.
   - Modul-Informationen hinzugefügt.
   - Instanz-Funktion / Timer zum Senden aller Outputs hinzugefügt (verhindert Timeout auf Reglern).
+  - Instanz-Funktion zum Senden von Bits hinzugefügt.
+  - Instanz-Funktion zum senden von ganzen Blöcken hinzugefügt.
+  - Sende-Prozess optimiert.
   
   Version 0.2 (BETA):
   - Dokumentation aktualisiert
