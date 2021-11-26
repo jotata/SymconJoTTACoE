@@ -22,7 +22,7 @@ Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verb
     3. [Modul-Funktionen](#3-modul-funktionen)
     4. [Fehlersuche](#5-fehlersuche)
 6. [Anhang](#6-anhang)  
-    1. [CoE-Datenblöcke](#1-coe-datenblöcke)
+    1. [CoE-Datenübermittlung](#1-coe-datenübermittlung)
     2. [Modul-Informationen](#2-modul-informationen)
     3. [Changelog](#3-changelog)
     4. [Spenden](#4-spenden)
@@ -73,8 +73,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   - **IP-Adresse:** IP-Adresse der CMI
   - **Empfange alle Daten:** Wird diese Option aktiviert, hört die Instanz auf alle Daten, welche via UDP Port 5441 an IPS gesendet werden (praktisch um im Debug-Log zu sehen, was die CMI alles sendet). Sonst hört die Instanz nur auf Daten von *IP-Adresse* und *Empfange von Knoten-Nr*. Diese Option sollte im produktiven Betrieb deaktiviert werden, da sonst mehrere CMIs in dieselben Variablen schreiben können.
   - **Empfange von Knoten-Nr:** Eine beliebige Zahl zwischen 0 (= Empfang deaktiviert) und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein. Die gleiche Knoten-Nr muss in der CMI auf den CoE-Ausgängen angegeben werden.
-  - **Eigene Knoten-Nr:** Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Reglere angegeben werden.
-  - Analoge / Digitale Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten):
+  - **Eigene Knoten-Nr:** Eine beliebige Zahl zwischen 1 und 62. Die Knoten-Nr darf auf keinem anderen CAN-Gerät konfiguriert sein, kann aber dieselbe sein wie *Empfange von Knoten-Nr*. Die gleiche Knoten-Nr muss auf den CAN-Eingängen der Regler angegeben werden.
+  - **Sende Ausgänge alle ...:** Intervall in Minuten (0 = deaktiviert), in welchem die Ausgangs-Variablen an die CMI/Regler gesendet werden sollen (auch wenn sie nicht geändert wurden). Dadurch wir ein Timeout auf den CAN-Eingängen der Regler verhindert.
+  - Analoge / Digitale Variablen (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenübermittlung) beachten):
     - **Ident:** Eindeutiger Name (Ident) der Variable innerhalb jeder Modul-Instanz. Diese Nr (ohne den Buchstaben) wird für den Netzwerkausgang (CoE-Ausgang auf der CMI) oder die Ausgangsnummer (CAN-Eingang auf Regler) angegeben.
     - **Name:** Entspricht dem Namen der Instanz-Variable in IPS (kann nur über die Eigenschaften der Variable im IPS-Objektbaum geändert werden).
     - **Variable:** Definiert einen der folgenden Zustände der Instanz-Variable:
@@ -97,7 +98,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   - **IP:** IP-Adresse von IPS (wie im UDP-Socket definiert)
   - **Knoten:** Wert aus "Empfange von Knoten-Nr" der Modul-Instanz
   - **Netzwerkausgang:** Nr "#" der jeweilgen Variable in der Modul-Instanz. Diese muss als *Eingang* oder *Eingang / Ausgang* konfiguriert sein. Wenn die entsprechende Variable nicht als Eingang definiert ist, wird der Wert verworfen (siehe Debug-Log).
-  - **Sendebedingung:** je nach Anforderung (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenblöcke) beachten)
+  - **Sendebedingung:** je nach Anforderung (bitte die Infos zu [CoE-Datenblöcke](#1-coe-datenübermittlung) beachten)
 
   Die CMI übermittelt per CoE auch die Messgrösse, welche auf dem Eingang eingestellt ist. Die Instanz wertet diese aus und passt das Variablen-Profil entsprechend an. Wenn auf der Variable ein eigenes Profil definiert wird, zeigt IPS die Einheit des eigenen Profils an.
 
@@ -113,29 +114,29 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   ### 3. Modul-Funktionen
   Die folgenden Funktionen stehen in IPS-Ereignissen/-Scripts zur Verfügung:
   ```php
-  IPS_RequestAction(int $InstanzID, string $Ident, float/boolean $Value);
+  IPS_RequestAction(int $InstanzID, string $Ident, float/bool $Value);
   ```
   Steht nur für Instanz-Variabeln, welche als Ausgang definiert sind, zur Verfügung und sendet den entsprechenden Wert per CoE an die CMI/Regler.
   ```php
-  JOTTACoE_SendAllOutputs(int $InstanzID);
+  JoTTACoE_SendAllOutputs(int $InstanzID);
   ```
-  Sendet alle aktiven Ausgangs-Variablen an die CMI/Regler.
+  Sendet alle aktiven Ausgangs-Variablen an die CMI/Regler. Diese Funktion wird automatisch alle x Minuten aufgerufen, wenn *Sende Ausgänge alle* grösser als 0 ist.
   ```php
-  JOTTACoE_SendBits(int $InstanzID, int $BlockNr, string $Bits);
+  JoTTACoE_SendBits(int $InstanzID, int $BlockNr, string $Bits);
   ```
   Sendet alle Werte aus *$Bits* als Datenblock an die CMI/Regler. In *$Bits* entspricht jede Zahl (0 oder 1) einem Ausgang (1. Zahl = 1. Netzwerkausgang des Blocks).*
   ```php
-  JOTTACoE_Send(int $InstanzID, int $BlockNr, array $Values, array $UnitIDs = []);
+  JoTTACoE_Send(int $InstanzID, int $BlockNr, array $Values, array $UnitIDs = []);
   ```
   Sendet einen Datenblock (*$BlockNr*) mit den Werten *$Values* und optional mit den Messgrössen (*$UnitIDs*) an die CMI/Regler. Dabei entsprechen *$Values[0] / $UnitIDs[0]* immer Wert / Messgrösse des ersten Netzwerkausganges vom Block. Die UnitID kann im Profilmanager (Float) den Profilen des Modules entnommen werden (Bsp.: JoTTACoE.Dollar.*51* => UnitID = *51*). Wird keine UnitID angegeben, erfolgt die Übertragung *dimensionslos*.*
 
-  *) Details zu BlockNr und Netzwerkausgang siehe [Datenblock](E#1-coe-datenbl%C3%B6cke).
+  *) Details zu BlockNr und Netzwerkausgang siehe [Datenblöcke](#1-coe-datenübermittlung).
 
   ### 5. Fehlersuche
   Die Debug-Funktion der Instanz liefert detaillierte Informationen über empfangenen / gesendeten Daten und die genutzen Datenblöcke. Auch verworfene Werte werden hier ausgegeben.
 
 ## 6. Anhang
-  ### 1. CoE-Datenblöcke
+  ### 1. CoE-Datenübermittlung
   CAN over Ethernet (CoE) versendet immer mehrere Werte als Datenblöcke per UDP auf Port 5441. Bei analogen Daten werden jeweils 4 Werte, bei digitalen Daten 16 Werte gleichzeitig miteinander versendet (auch wenn diese nicht definiert oder geändert wurden).
   Jedes CoE-Paket besteht aus 14 Bytes. Die ersten zwei Bytes sind für den Header reserviert und beinhalten die Konten-Nr des Absenders sowie die Block-Nr der Daten. Die restlichen 12 Daten-Bytes enthalten die entsprechenden Werte und die Messgrösse als UnitID.
 
