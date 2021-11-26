@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   26.11.2021 10:44:11
+ * @Last Modified:   26.11.2021 11:01:16
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -274,16 +274,15 @@ class JoTTACoE extends IPSModule {
         //Alle Ausgänge ermitteln und in Blöcken zusmmenfassen
         $outputs = [];
         $send = [];
-        $sent = -1;
-        foreach (['Analog', 'Digital'] as $type) {
-            $x = json_decode($this->ReadPropertyString($type));
-            foreach ($x as $c) {
-                if ($c->Config > 2) { //Output oder Input/Output
-                    $outputs[] = $c->Ident;
-                    $block = $this->GetBlockInfoByIdent($c->Ident);
-                    if ($sent !== $block->Nr) { //Block wird noch nicht gesendet (wenn Block gesendet wird, gehen alle Idents innerhalb des Blocks mit)
-                        $send[] = $c->Ident;
-                        $sent = $block->Nr;
+        for ($i = 0; $i < 10; $i++) { //Alle möglichen Blöcke (0-9) durchlaufen
+            $block= $this->GetBlockInfoByNr($i);
+            $sent = false; 
+            foreach ($block->Idents as $idt) {
+                if ($block->Config[$idt] > 2) { //Output oder Input/Output
+                    $outputs[] = $idt;
+                    if ($sent === false) { //Block wird noch nicht gesendet (wenn Block gesendet wird, gehen alle Idents innerhalb des Blocks mit)
+                        $send[] = $idt;
+                        $sent = true;
                     }
                 }
             }
