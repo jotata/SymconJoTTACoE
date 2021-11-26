@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   26.11.2021 18:49:06
+ * @Last Modified:   26.11.2021 19:07:28
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -405,7 +405,7 @@ class JoTTACoE extends IPSModule {
                     if ($var['VariableCustomProfile'] !== '' && strpos($var['VariableCustomProfile'], self::PREFIX . '.') === 0) { //CustomProfile entspricht einem Modul-Profil
                         $pName = $var['VariableCustomProfile'];
                     }
-                    $u = intval(filter_var($pName, FILTER_SANITIZE_NUMBER_INT)); //nur die UnitID im Profilnamen ist eine Zahl
+                    $u = intval(substr($pName, strrpos($pName, '.') + 1)); //Zahl nach dem letzten Punkt in Profilnamen = UnitID
                 }
             } else { // nicht als Output definiert oder IPS-Variable nicht vorhanden
                 $discarded .= "$idt, ";
