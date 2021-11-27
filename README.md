@@ -9,7 +9,7 @@ Erweiterung zum Lesen/Schreiben der Werte eines Gerätes von <a href="https://ww
 Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verbunden wird. Über das CoE-Protokoll lassen sich Werte aus dem CAN-Bus empfangen/senden ohne die Limitierungen der JSON-API. Diese kann nur einmal pro Minute Werte lesen aber keine Werte schreiben, benötigt dafür aber deutlich weniger Konfigurationsaufwand.
 
 ## Dokumentation
-<p align="right"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9M6W4KM34HWMA&source=url" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>
+<p align="right"><a href="https://www.paypal.com/donate/?hosted_button_id=9M6W4KM34HWMA" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>
 
 **Inhaltsverzeichnis**
 1. [Funktionsumfang](#1-funktionsumfang)  
@@ -203,7 +203,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
 
   ### 4. Spenden    
   Das Modul ist für die nicht kommzerielle Nutzung kostenlos. Spenden als Unterstützung für den Autor sind aber willkommen:  
-  <p align="center"><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=9M6W4KM34HWMA&source=url" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>
+  <p align="center"><a href="https://www.paypal.com/donate/?hosted_button_id=9M6W4KM34HWMA" target="_blank"><img src="https://www.paypalobjects.com/de_DE/CH/i/btn/btn_donateCC_LG.gif" border="0" /></a></p>
 
 ## 7. Support
 Fragen, Anregungen, Kritik und Fehler zu diesem Modul können im entsprechenden [Thread des IPS-Forums](https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe) deponiert werden.
