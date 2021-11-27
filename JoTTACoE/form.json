@@ -14,7 +14,7 @@
         {
             "type": "ExpansionPanel",
             "caption": "Configuration Remote CMI",
-            "expanded": "true",
+            "expanded": true,
             "items": [
                 {
                     "type": "ValidationTextBox",
@@ -39,7 +39,7 @@
         },{
             "type": "ExpansionPanel",
             "caption": "Configuration CoE Node",
-            "expanded": "true",
+            "expanded": true,
             "items": [
                 {
                     "type": "RowLayout",

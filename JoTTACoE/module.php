@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   26.11.2021 19:07:28
+ * @Last Modified:   27.11.2021 15:31:26
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -159,7 +159,7 @@ class JoTTACoE extends IPSModule {
         //Variabeln in $form ersetzen
         $form = file_get_contents(__DIR__ . '/form.json');
         $form = $this->AddModuleInfoAsElement($form);
-        $form = str_replace('$EnableRemoteNodeNr', $this->ConvertToBoolStr($this->ReadPropertyBoolean('DisableReceiveDataFilter'), true), $form);
+        $form = str_replace('"$EnableRemoteNodeNr"', $this->ConvertToBoolStr($this->ReadPropertyBoolean('DisableReceiveDataFilter'), true), $form);
         $form = str_replace('"$AnalogValues"', json_encode($AnalogValues), $form);
         $form = str_replace('"$DigitalValues"', json_encode($DigitalValues), $form);
         return $form;
@@ -183,7 +183,7 @@ class JoTTACoE extends IPSModule {
         if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
             $this->SetStatus(self::STATUS_Ok_InstanceActive);
         }
-        $this->SendDebug('RECEIVE DATA -> JSONString', $JSONString, 0);
+        $this->SendDebug('RECEIVE Data -> JSONString', $JSONString, 0);
         $data = json_decode($JSONString);
         $buffer = utf8_decode($data->Buffer);
         $header = unpack('CNodeNr/CBlock', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
@@ -219,7 +219,7 @@ class JoTTACoE extends IPSModule {
             $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
             $bin = str_repeat('0', (16 - strlen($bin))) . $bin; //auf 16 Bit mit 0 auffüllen
             $buffer = strrev($bin); //Bits in Reihenfolge umdrehen
-            $this->SendDebug("RECEIVE DATA ($block->Text) -> Bits", $bin, 0);
+            $this->SendDebug("RECEIVE Data ($block->Text) -> Bits", $bin, 0);
             for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
                 $ident = $block->Type . ($block->Min + $i);
@@ -227,7 +227,7 @@ class JoTTACoE extends IPSModule {
                 $values[$ident]['UnitID'] = -1;
             }
         } elseif (@$block->Type === 'A') { //Analoge Daten
-            $this->SendDebug("RECEIVE DATA ($block->Text) -> RAW", $buffer, 1);
+            $this->SendDebug("RECEIVE Data ($block->Text) -> RAW", $buffer, 1);
             $x = unpack('s4Value/C4UnitID', $buffer);
             for ($i = 0; $i < 4; $i++) { //Werte berechnen und den entsprechenden Values zuweisen
                 $val = $x['Value' . ($i + 1)];
@@ -256,9 +256,9 @@ class JoTTACoE extends IPSModule {
                 }
             }
         }
-        $this->SendDebug("RECEIVE DATA ($block->Text) -> Values", trim($strValues, ' |'), 0);
+        $this->SendDebug("RECEIVE Data ($block->Text) -> Values", trim($strValues, ' |'), 0);
         if (strlen($discarded) > 0) {
-            $this->SendDebug("RECEIVE DATA ($block->Text) -> Skipped", 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
+            $this->SendDebug("RECEIVE Data ($block->Text) -> Skipped", 'Variable(s) not active/input: ' . trim($discarded, ','), 0);
         }
     }
 
