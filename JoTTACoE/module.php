@@ -6,13 +6,13 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   27.11.2021 15:31:26
+ * @Last Modified:   02.12.2021 17:12:50
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
  *                   (http://creativecommons.org/licenses/by-nc-sa/4.0/legalcode)
  */
-require_once __DIR__ . '/../libs/JoT_Traits.php';  //Bibliothek mit allgemeinen Definitionen & Traits
+require_once __DIR__ . '/../libs/JoT_Traits.php'; //Bibliothek mit allgemeinen Definitionen & Traits
 
 /**
  * JoTTACoE ist eine Unterklasse von IPSModule für die Integration der Geräte von Technische Alternative mittels CoE via CMI.
@@ -363,6 +363,7 @@ class JoTTACoE extends IPSModule {
 
         //Alle Ausgänge ermitteln und in Blöcken zusmmenfassen
         $send = [];
+        $idents = '';
         for ($i = 0; $i < 10; $i++) { //Alle möglichen Blöcke (0-9) durchlaufen
             $block = $this->GetBlockInfoByNr($i);
             $sent = false;
@@ -372,6 +373,7 @@ class JoTTACoE extends IPSModule {
                         $send[$block->Nr] = $this->GetBlockValuesFromInstance($block);
                         $sent = true;
                     }
+                    $idents .= ", $idt";
                 }
             }
         }
@@ -381,6 +383,11 @@ class JoTTACoE extends IPSModule {
             $this->Send($blockNr, array_column($values, 'Value'), array_column($values, 'UnitID'));
         }
         $this->SendDebug('SEND all Outputs', 'Done', 0);
+
+        //Bestätigung wenn in KonfigurationsForm aufgerufen
+        if (func_num_args() === 1 && func_get_arg(0) === true) { //wird nur bei Button SendAllOutputs in Konfigurationsform mitgegeben
+            echo $this->Translate('Sent outputs') . ': ' . trim($idents, ', ');
+        }
     }
 
     /**

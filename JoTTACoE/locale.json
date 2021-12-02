@@ -19,6 +19,8 @@
             "input": "Eingang",
             "output": "Ausgang",
             "input / output": "Eingang / Ausgang",
+            "Send now": "Jetzt senden",
+            "Sent outputs": "Ausgänge gesendet",
             "Wrong Ident (%s) - has to be between A1-A32 or D1-D32": "Ungültiger Ident (%s) - muss zwischen A1-32 oder D1-32 sein",
             "Wrong BlockNr (%s) - has to be between 0-9": "Ungültige BlockNr (%s) - muss zwischen 0-9 sein"
         }

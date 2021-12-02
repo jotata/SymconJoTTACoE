@@ -56,6 +56,11 @@
                             "caption": "Send outputs all (or immediately if there is a change)",
                             "suffix": "minutes",
                             "minimum": 0 
+                        },{
+                            "type": "Button",
+                            "name": "SendAllOutputs",
+                            "caption": "Send now",
+                            "onClick": "IPS_RequestAction($id, 'SendAllOutputs', true);"
                         }
                     ]
                 },{
@@ -151,7 +156,14 @@
     ],
     "actions":[
         {
-            "type": "TestCenter"
+            "type": "ExpansionPanel",
+            "caption": "Test-Center",
+            "expanded": false,
+            "items": [
+                {
+                    "type": "TestCenter"
+                }
+            ]
         }
     ]
 }
