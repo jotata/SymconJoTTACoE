@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   02.12.2021 17:45:57
+ * @Last Modified:   02.12.2021 17:57:30
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -27,9 +27,6 @@ class JoTTACoE extends IPSModule {
     protected const STATUS_Ok_InstanceActive = 102;
     protected const STATUS_Ok_WaitingData = 204;
     protected const STATUS_Error_FailedDependency = 424;
-    protected const LED_Off = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUAQMAAAC3R49OAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAADUExURcPDw9YpAkQAAAAJcEhZcwAAFiQAABYkAZsVxhQAAAANSURBVBjTY6AqYGAAAABQAAGwhtz8AAAAAElFTkSuQmCC';
-    protected const LED_Read = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAA3SURBVDhPpcexDQAwCMAw/n+a7p6IKnnxzH7wiU984hOf+MQnPvGJT3ziE5/4xCc+8YlP/N3OA6M/joCROxOnAAAAAElFTkSuQmCC';
-    protected const LED_Write = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAIAAAAC64paAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAAiSURBVDhPY/zPQD5ggtJkgVHNJIJRzSSCUc0kgiGpmYEBACKcASfOmBk0AAAAAElFTkSuQmCC';
 
     /**
      * Interne Funktion des SDK.
@@ -49,7 +46,6 @@ class JoTTACoE extends IPSModule {
         $this->RegisterTimer('OutputTimer', 1 * 60 * 1000, static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Ausgänge jede Minute senden
         $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
-        $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz verfügbar
 
         //Units einlesen und analoge Profile verwalten
         $units = file_get_contents(__DIR__ . '/units.json');
@@ -74,7 +70,7 @@ class JoTTACoE extends IPSModule {
 
     /**
      * Interne Funktion des SDK.
-     * Definiert die KOnfiguration der übergeordneten Instanz
+     * Definiert die Konfiguration der übergeordneten Instanz
      * @access public
      */
     public function GetConfigurationForParent() {
@@ -172,14 +168,6 @@ class JoTTACoE extends IPSModule {
         $form = str_replace('"$AnalogValues"', json_encode($AnalogValues), $form);
         $form = str_replace('"$DigitalValues"', json_encode($DigitalValues), $form);
         return $form;
-    }
-
-    /**
-     * Interne Funktion des SDK.
-     * Wird ausgeführt wenn eine registrierte Nachricht von IPS verfügbar ist.
-     * @access public
-     */
-    public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data) {
     }
 
     /**
