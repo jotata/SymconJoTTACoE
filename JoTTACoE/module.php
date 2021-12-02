@@ -88,7 +88,7 @@ class JoTTACoE extends IPSModule {
         if ($this->GetStatus() == IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
             return;
         }
-        
+
         //ReceiveDataFilter anpassen
         $filter = '';
         if ($this->ReadPropertyBoolean('DisableReceiveDataFilter') === false) {

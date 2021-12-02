@@ -102,19 +102,19 @@ class JoTTACoE_Test extends TestCase {
         IPS_SetConfiguration($iID, $conf);
         IPS_ApplyChanges($iID);
 
-        $this->assertFalse(@IPS_GetObjectIDByIdent("A1", $iID)); //Variable soll nicht erstellt sein
-        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent("A2", $iID)); //Variable soll vorhanden sein (Aktiviert)
-        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent("A3", $iID)); //Variable soll vorhanden sein (Eingang)
-        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent("A4", $iID)); //Variable soll vorhanden sein (Ausgang)
-        
+        $this->assertFalse(@IPS_GetObjectIDByIdent('A1', $iID)); //Variable soll nicht erstellt sein
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A2', $iID)); //Variable soll vorhanden sein (Aktiviert)
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A3', $iID)); //Variable soll vorhanden sein (Eingang)
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A4', $iID)); //Variable soll vorhanden sein (Ausgang)
+
         //Knoten 10 | Block 1 | A1=10.0°C | A2=10.0°C | A3=10.0°C | A4=10.0°C
         $data = '{"DataID":"{7A1272A4-CBDB-46EF-BFC6-DCF4A53D2FC7}","Type":0,"Buffer":"\n\u0001d\u0000d\u0000d\u0000d\u0000\u0001\u0001\u0001\u0001","ClientIP":"127.0.0.1","ClientPort":5441}';
         JoTTACoE_TestFunction($iID, 'ReceiveData', [$data]);
-        
-        $this->assertEquals(0, GetValue(IPS_GetObjectIDByIdent("A2", $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
-        $this->assertEquals(10.0,  GetValue(IPS_GetObjectIDByIdent("A3", $iID))); //Variable = 10.0 (Eingang)
-        $this->assertEquals('JoTTACoE.Temperatur.1',  IPS_GetVariable(IPS_GetObjectIDByIdent("A3", $iID))['VariableProfile']); //Profil entspricht UnitID 1 (Temperatur in °C)
-        $this->assertEquals(0,  GetValue(IPS_GetObjectIDByIdent("A4", $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
+
+        $this->assertEquals(0, GetValue(IPS_GetObjectIDByIdent('A2', $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
+        $this->assertEquals(10.0, GetValue(IPS_GetObjectIDByIdent('A3', $iID))); //Variable = 10.0 (Eingang)
+        $this->assertEquals('JoTTACoE.Temperatur.1', IPS_GetVariable(IPS_GetObjectIDByIdent('A3', $iID))['VariableProfile']); //Profil entspricht UnitID 1 (Temperatur in °C)
+        $this->assertEquals(0, GetValue(IPS_GetObjectIDByIdent('A4', $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
     }
 
     //Testet Aufbereitung der Daten beim Versand
