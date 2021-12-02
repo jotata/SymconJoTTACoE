@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   02.12.2021 17:57:30
+ * @Last Modified:   03.12.2021 00:20:50
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -85,6 +85,10 @@ class JoTTACoE extends IPSModule {
     public function ApplyChanges() {
         parent::ApplyChanges();
 
+        if ($this->GetStatus() == IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
+            return;
+        }
+        
         //ReceiveDataFilter anpassen
         $filter = '';
         if ($this->ReadPropertyBoolean('DisableReceiveDataFilter') === false) {
@@ -103,27 +107,25 @@ class JoTTACoE extends IPSModule {
         $this->SendDebug('Set ReceiveDataFilter to', "$filter.*", 0);
         $this->SetReceiveDataFilter("$filter.*");
 
-        if ($this->GetStatus() !== IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
-            $units = json_decode($this->GetBuffer('Units'));
-            //Analoge Instanz-Variablen pflegen
-            $x = json_decode($this->ReadPropertyString('Analog'));
-            foreach ($x as $c) {
-                $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, $units->{0}->ProfileName, $c->ID, ($c->Config > 0));
-                if ($c->Config > 2) { //Output oder Input/Output
-                    $this->EnableAction($c->Ident);
-                } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
-                    $this->DisableAction($c->Ident);
-                }
+        $units = json_decode($this->GetBuffer('Units'));
+        //Analoge Instanz-Variablen pflegen
+        $x = json_decode($this->ReadPropertyString('Analog'));
+        foreach ($x as $c) {
+            $this->MaintainVariable($c->Ident, 'Analog ' . $c->ID, VARIABLETYPE_FLOAT, $units->{0}->ProfileName, $c->ID, ($c->Config > 0));
+            if ($c->Config > 2) { //Output oder Input/Output
+                $this->EnableAction($c->Ident);
+            } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
+                $this->DisableAction($c->Ident);
             }
-            //Digitale Instanz-Variablen pflegen
-            $x = json_decode($this->ReadPropertyString('Digital'));
-            foreach ($x as $c) {
-                $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, $units->{-1}->ProfileName, $c->ID + 32, ($c->Config > 0));
-                if ($c->Config > 2) { //Output oder Input/Output
-                    $this->EnableAction($c->Ident);
-                } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
-                    $this->DisableAction($c->Ident);
-                }
+        }
+        //Digitale Instanz-Variablen pflegen
+        $x = json_decode($this->ReadPropertyString('Digital'));
+        foreach ($x as $c) {
+            $this->MaintainVariable($c->Ident, 'Digital ' . $c->ID, VARIABLETYPE_BOOLEAN, $units->{-1}->ProfileName, $c->ID + 32, ($c->Config > 0));
+            if ($c->Config > 2) { //Output oder Input/Output
+                $this->EnableAction($c->Ident);
+            } elseif ($c->Config > 0) { //Nur wenn Variable vorhanden ist
+                $this->DisableAction($c->Ident);
             }
         }
 
