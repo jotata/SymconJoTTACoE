@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   02.12.2021 17:12:50
+ * @Last Modified:   02.12.2021 17:45:57
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -70,6 +70,15 @@ class JoTTACoE extends IPSModule {
             unset($aUnits[$u->UnitID]->UnitID);
         }
         $this->SetBuffer('Units', json_encode($aUnits));
+    }
+
+    /**
+     * Interne Funktion des SDK.
+     * Definiert die KOnfiguration der übergeordneten Instanz
+     * @access public
+     */
+    public function GetConfigurationForParent() {
+        return '{"BindPort":5441,"Host":"","Port":0,"EnableBroadcast":false,"EnableReuseAddress":false}';
     }
 
     /**
@@ -286,7 +295,7 @@ class JoTTACoE extends IPSModule {
     public function Send(int $BlockNr, array $Values, array $UnitIDs = []) {
         if ($this->HasActiveParent() === false) {
             $this->SetStatus(self::STATUS_Error_FailedDependency);
-            $this->ThrowMessage('I/O-Instance not ready - check gateway -> Stopping', $BlockNr);
+            $this->ThrowMessage('I/O-Instance not ready - check gateway -> Stopping');
             return false;
         }
 
