@@ -1,12 +1,12 @@
 <?php
-
 declare(strict_types=1);
+
 /**
  * @Package:         tests
  * @File:            JoTTACoE_Test.php
  * @Create Date:     13.11.2021 15:45:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   03.12.2021 00:18:44
+ * @Last Modified:   03.12.2021 16:45:19
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -86,44 +86,75 @@ class JoTTACoE_Test extends TestCase {
     //Testet ob die Instanz erstellt werden kann
     public function testCreateInstance() {
         IPS_CreateVariableProfile('~Switch', VARIABLETYPE_BOOLEAN); //Wird für Digitale Variablen benötigt
+        //(Parent)Instanz erstellen
         $soID = IPS_CreateInstance($this->socketID);
         IPS_SetConfiguration($soID, json_encode(['Host' => '127.0.0.1', 'Open' => true, 'Port' => 5441]));
         IPS_ApplyChanges($soID);
         $iID = IPS_CreateInstance($this->moduleID);
-        $this->assertGreaterThan(0, $iID);
+        IPS_ConnectInstance($iID, $soID);
+        $this->assertGreaterThan(0, $iID); //Instanz erfolgreich erstellt?
+
+        //Instanz konfigurieren
+        $analog = '[{\"ID\":1,\"Ident\":\"A1\",\"Config\":0},{\"ID\":2,\"Ident\":\"A2\",\"Config\":1},{\"ID\":3,\"Ident\":\"A3\",\"Config\":2},{\"ID\":4,\"Ident\":\"A4\",\"Config\":3}]';
+        $digital = '[{\"ID\":1,\"Ident\":\"D1\",\"Config\":0},{\"ID\":2,\"Ident\":\"D2\",\"Config\":1},{\"ID\":3,\"Ident\":\"D3\",\"Config\":2},{\"ID\":4,\"Ident\":\"D4\",\"Config\":3},'
+            . '{\"ID\":5,\"Ident\":\"D5\",\"Config\":0},{\"ID\":6,\"Ident\":\"D6\",\"Config\":1},{\"ID\":7,\"Ident\":\"D7\",\"Config\":2},{\"ID\":8,\"Ident\":\"D8\",\"Config\":3},'
+            . '{\"ID\":9,\"Ident\":\"D9\",\"Config\":0},{\"ID\":10,\"Ident\":\"D10\",\"Config\":1},{\"ID\":11,\"Ident\":\"D11\",\"Config\":2},{\"ID\":12,\"Ident\":\"D12\",\"Config\":3},'
+            . '{\"ID\":13,\"Ident\":\"D13\",\"Config\":0},{\"ID\":14,\"Ident\":\"D14\",\"Config\":1},{\"ID\":15,\"Ident\":\"D15\",\"Config\":2},{\"ID\":16,\"Ident\":\"D16\",\"Config\":3}]';
+        $conf = '{"RemoteIP":"127.0.0.1","RemoteNodeNr":10,"NodeNr":10,"DisableReceiveDataFilter":1,"Analog":"' . $analog . '","Digital":"' . $digital . '"}';
+        IPS_SetConfiguration($iID, $conf);
+        IPS_ApplyChanges($iID);
+        $this->assertFalse(@IPS_GetObjectIDByIdent('A1', $iID)); //Variable soll nicht erstellt sein
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A2', $iID)); //Variable soll vorhanden sein (Aktiviert)
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A3', $iID)); //Variable soll vorhanden sein (Eingang)
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A4', $iID)); //Variable soll vorhanden sein (Ausgang)
+        $this->assertFalse(@IPS_GetObjectIDByIdent('D1', $iID)); //Variable soll nicht erstellt sein
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('D2', $iID)); //Variable soll vorhanden sein (Aktiviert)
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('D3', $iID)); //Variable soll vorhanden sein (Eingang)
+        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('D4', $iID)); //Variable soll vorhanden sein (Ausgang)
         return $iID;
     }
 
     //Testet Aufbereitung der Daten beim Empfang
     public function testReceiveData() {
         $iID = $this->testCreateInstance();
-        $analog = '[{\"ID\":1,\"Ident\":\"A1\",\"Config\":0},{\"ID\":2,\"Ident\":\"A2\",\"Config\":1},{\"ID\":3,\"Ident\":\"A3\",\"Config\":2},{\"ID\":4,\"Ident\":\"A4\",\"Config\":3}]';
-        $conf = '{"RemoteIP":"127.0.0.1","RemoteNodeNr":10,"NodeNr":10,"DisableReceiveDataFilter":1,"Analog":"' . $analog . '","Digital":"[{\"ID\":1,\"Ident\":\"D1\",\"Config\":3}]"}';
-        IPS_SetConfiguration($iID, $conf);
-        IPS_ApplyChanges($iID);
-
-        $this->assertFalse(@IPS_GetObjectIDByIdent('A1', $iID)); //Variable soll nicht erstellt sein
-        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A2', $iID)); //Variable soll vorhanden sein (Aktiviert)
-        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A3', $iID)); //Variable soll vorhanden sein (Eingang)
-        $this->assertGreaterThan(0, IPS_GetObjectIDByIdent('A4', $iID)); //Variable soll vorhanden sein (Ausgang)
-
-        //Knoten 10 | Block 1 | A1=10.0°C | A2=10.0°C | A3=10.0°C | A4=10.0°C
-        $data = '{"DataID":"{7A1272A4-CBDB-46EF-BFC6-DCF4A53D2FC7}","Type":0,"Buffer":"\n\u0001d\u0000d\u0000d\u0000d\u0000\u0001\u0001\u0001\u0001","ClientIP":"127.0.0.1","ClientPort":5441}';
-        JoTTACoE_TestFunction($iID, 'ReceiveData', [$data]);
-
+        $pID = IPS_GetInstance($iID)['ConnectionID'];
+        
+        //Analoge Werte testen
+        $data = pack('C2s4C4', 10, 1, 100, 100, 100, 100, 1, 1, 1, 1); //Knoten 10 | Block 1 | A1=10.0°C | A2=10.0°C | A3=10.0°C | A4=10.0°C
+        USCK_PushPacket($pID, $data, '127.0.0.1', 5441);
         $this->assertEquals(0, GetValue(IPS_GetObjectIDByIdent('A2', $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
         $this->assertEquals(10.0, GetValue(IPS_GetObjectIDByIdent('A3', $iID))); //Variable = 10.0 (Eingang)
         $this->assertEquals('JoTTACoE.Temperatur.1', IPS_GetVariable(IPS_GetObjectIDByIdent('A3', $iID))['VariableProfile']); //Profil entspricht UnitID 1 (Temperatur in °C)
         $this->assertEquals(0, GetValue(IPS_GetObjectIDByIdent('A4', $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
+
+        //Digitale Werte testen
+        SetValue(IPS_GetObjectIDByIdent('D7', $iID), true);
+        $data = pack('C2vx10', 10, 0, 15); //Knoten 10 | Block 0 | D1=1 | D2=1 | D3=1 | D4=1 | D5-16=0
+        USCK_PushPacket($pID, $data, '127.0.0.1', 5441);
+        $this->assertFalse(@IPS_GetObjectIDByIdent('D1', $iID)); //Variable soll nicht erstellt sein
+        $this->assertEquals(false, GetValue(IPS_GetObjectIDByIdent('D2', $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
+        $this->assertEquals(true, GetValue(IPS_GetObjectIDByIdent('D3', $iID))); //Variable = true (Eingang)
+        $this->assertEquals(false, GetValue(IPS_GetObjectIDByIdent('D4', $iID))); //Variable darf nicht gefüllt werden (kein Eingang)
+        $this->assertEquals(false, GetValue(IPS_GetObjectIDByIdent('D7', $iID))); //Variable = false (Eingang)
     }
 
     //Testet Aufbereitung der Daten beim Versand
     public function testSendData() {
         $iID = $this->testCreateInstance();
-        $conf = '{"RemoteIP":"127.0.0.1","RemoteNodeNr":10,"NodeNr":10,"Analog":"[{\"ID\":1,\"Ident\":\"A1\",\"Config\":3}]","Digital":"[{\"ID\":1,\"Ident\":\"D1\",\"Config\":3}]"}';
-        IPS_SetConfiguration($iID, $conf);
-        IPS_ApplyChanges($iID);
-        $res = true; //IPS_RequestAction($iID, 'A1', 10); //in Test-Stubs nicht implementirert
-        $this->assertTrue($res);
+        $pID = IPS_GetInstance($iID)['ConnectionID'];
+        JoTTACoE_TestFunction($iID, 'SetStatus', [IS_ACTIVE]); //Status ist nach Initialisierung STATUS_Ok_WaitingData (204) bis die ersten Daten ankommen. Daher Status manuell ändern.
+        IPS_SetVariableCustomProfile(IPS_GetObjectIDByIdent('A4', $iID), 'JoTTACoE.Temperatur.1');
+        
+        //Analoge Werte testen
+        RequestAction(IPS_GetObjectIDByIdent('A4', $iID), 10.1);
+        $data = USCK_PopPacket($pID);
+        $res = pack('C2s4C4', 10, 1, 0, 0, 0, 101, 0, 0, 0, 1); //Knoten 10 | Block 1 | A1=0 | A2=0 | A3=0 | A4=10.1°C (101);
+        $this->assertEquals($res, $data['Buffer']);
+
+        //Digitale Werte testen
+        RequestAction(IPS_GetObjectIDByIdent('D4', $iID), true);
+        $data = USCK_PopPacket($pID);
+        $res = pack('C2vx10', 10, 0, 8); //Knoten 10 | Block 0 | D1=0 | D2=0 | D3=0 | D4=1 | D5-16=0
+        $this->assertEquals($res, $data['Buffer']);
     }
 }
