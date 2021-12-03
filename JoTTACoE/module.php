@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   03.12.2021 00:20:50
+ * @Last Modified:   03.12.2021 16:48:29
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -22,6 +22,8 @@ class JoTTACoE extends IPSModule {
     use Translation;
     use RequestAction;
     use ModuleInfo;
+    use TestFunction;
+    
     protected const PREFIX = 'JoTTACoE';
     protected const MODULEID = '{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}';
     protected const STATUS_Ok_InstanceActive = 102;
@@ -222,7 +224,7 @@ class JoTTACoE extends IPSModule {
             for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
                 $ident = $block->Type . ($block->Min + $i);
-                $values[$ident]['Value'] = $bit;
+                $values[$ident]['Value'] = boolval($bit);
                 $values[$ident]['UnitID'] = -1;
             }
         } elseif (@$block->Type === 'A') { //Analoge Daten
@@ -244,7 +246,7 @@ class JoTTACoE extends IPSModule {
         $strValues = '';
         $discarded = '';
         foreach ($values as $ident => $value) {
-            $strValues .= " | $ident: " . $value['Value'] . $units->{$value['UnitID']}->Suffix;
+            $strValues .= " | $ident: " . floatval($value['Value']) . $units->{$value['UnitID']}->Suffix;
             $vID = @$this->GetIDForIdent($ident);
             if ($vID === false || ($block->Config[$ident] !== 2 && $block->Config[$ident] !== 4)) { //Variable nicht vorhanden oder nicht als Input (2) oder Input/Output (4) konfiguriert
                 $discarded .= ", $ident";
