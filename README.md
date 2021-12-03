@@ -61,7 +61,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
    2. Im Schnellfilter **CoE-Knoten** eingeben
    3. Das Gerät **CoE-Knoten (Remote-CMI)** auswählen
    4. Name & Ort anpassen (optional)
-   5. Falls noch keine UDP-Socket Instanz vorhanden ist, wird eine solche erstellt. Diese entsprechend konfigurieren:
+   5. Falls noch keine UDP-Socket Instanz vorhanden ist, wird eine solche erstellt. Diese wird entsprechend konfiguriert:
       - **Socket öffnen:** Ein
       - **Sende-Host/-Port:** leer lassen (Derselbe UDP-Socket kann für mehrere Instanzen genutzt werden. Die IP der jeweiligen CMI wird direkt im Modul eingestellt.)
       - **Empf.-Host:** IP-Adresse von IPS auswählen (Gleiche IP muss auf der CMI in der Konfiguration der CoE-Ausgänge angegeben werden.)
@@ -185,6 +185,11 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 0.4 (BETA):
+  - Automatische Konfiguration für UDP-Socket hinzugefügt
+  - Button *Jetzt Senden* hinzugefügt
+  - Unit-Test hinzugefügt
+  
   Version 0.3 (BETA):
   - Fix: ReceiveDataFilter korrigiert, so dass auch Daten von Nodes 11, 14-31 empfangen werden.
   - Modul-Informationen hinzugefügt.
