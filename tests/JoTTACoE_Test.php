@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -118,7 +119,7 @@ class JoTTACoE_Test extends TestCase {
     public function testReceiveData() {
         $iID = $this->testCreateInstance();
         $pID = IPS_GetInstance($iID)['ConnectionID'];
-        
+
         //Analoge Werte testen
         $data = pack('C2s4C4', 10, 1, 100, 100, 100, 100, 1, 1, 1, 1); //Knoten 10 | Block 1 | A1=10.0°C | A2=10.0°C | A3=10.0°C | A4=10.0°C
         USCK_PushPacket($pID, $data, '127.0.0.1', 5441);
@@ -144,7 +145,7 @@ class JoTTACoE_Test extends TestCase {
         $pID = IPS_GetInstance($iID)['ConnectionID'];
         JoTTACoE_TestFunction($iID, 'SetStatus', [IS_ACTIVE]); //Status ist nach Initialisierung STATUS_Ok_WaitingData (204) bis die ersten Daten ankommen. Daher Status manuell ändern.
         IPS_SetVariableCustomProfile(IPS_GetObjectIDByIdent('A4', $iID), 'JoTTACoE.Temperatur.1');
-        
+
         //Analoge Werte testen
         RequestAction(IPS_GetObjectIDByIdent('A4', $iID), 10.1);
         $data = USCK_PopPacket($pID);

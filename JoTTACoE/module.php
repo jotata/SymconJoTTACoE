@@ -23,7 +23,7 @@ class JoTTACoE extends IPSModule {
     use RequestAction;
     use ModuleInfo;
     use TestFunction;
-    
+
     protected const PREFIX = 'JoTTACoE';
     protected const MODULEID = '{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}';
     protected const STATUS_Ok_InstanceActive = 102;
