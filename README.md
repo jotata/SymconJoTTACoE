@@ -1,6 +1,6 @@
 [![IP-Symcon is awesome!](https://img.shields.io/badge/IP--Symcon-6.0-blue.svg)](https://www.symcon.de)
-[![Check Style](https://github.com/jotata/SymconJoTKPP/workflows/Check%20Style/badge.svg)](https://github.com/jotata/SymconJoTKPP/actions?query=workflow%3A%22Check+Style%22)
-[![Run Tests](https://github.com/jotata/SymconJoTKPP/workflows/Run%20Tests/badge.svg)](https://github.com/jotata/SymconJoTKPP/actions?query=workflow%3A%22Run+Tests%22)
+[![Check Style](https://github.com/jotata/SymconJoTTACoE/workflows/Check%20Style/badge.svg)](https://github.com/jotata/SymconJoTTaCoE/actions?query=workflow%3A%22Check+Style%22)
+[![Run Tests](https://github.com/jotata/SymconJoTTACoE/workflows/Run%20Tests/badge.svg)](https://github.com/jotata/SymconJoTTACoE/actions?query=workflow%3A%22Run+Tests%22)
 [![Tested with](https://img.shields.io/badge/tested-UVR16x2-blue)](https://www.ta.co.at/x2-frei-programmierbare-regler/uvr16x2/)
 [![Release Version](https://img.shields.io/github/v/release/jotata/SymconJoTTACoE)](https://github.com/jotata/SymconJoTTACoE/releases)
 
