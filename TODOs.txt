@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   26.11.2021 19:08:27
+ * @Last Modified:   04.12.2021 10:59:40
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -26,14 +26,14 @@ x Anzeige der installierten Version im Konfigurationsform hinzufügen (inkl. Spe
 x Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
 x Senden in SendAllOutput überarbeiten / Senden ohne RequestAction?
 x in RequestVariableAction muss die Ermittlung der UnitID überarbeitet werden. Es kann Profile mit Zahlen im NAmen geben (z.B. JoTTACoE.CO2-Gehalt.67). Diese können sonst nicht ermittelt werden.
-- Kontrolle Voraussetzungen Gateway (Port & Active)
-- Ping/Connection-Test Port 5441 auf IP Remote-CMI
-- Fehleranalyse enabled / visible = false funktioniert initial bei NumberSpinner (Empfange von KnotenNr) nicht, über $this->UpdateFormField aber dann doch (IPS-Bug?)
+x Test-Center ein/ausblenden & Button für SendAllOutput hinzufügen
+x Kontrolle Voraussetzungen Gateway (Port & Active)
+x Fehleranalyse enabled / visible = false funktioniert initial bei NumberSpinner (Empfange von KnotenNr) nicht, über $this->UpdateFormField aber dann doch (IPS-Bug?)
 
 FEATURES & FIXES V1.0
-- ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
-  Alternativ prüfen, was TA hier vorschlägt...
-- PHPUnit-Test SendData & ReceiveData
+x PHPUnit-Test SendData & ReceiveData
+x Action zum Senden von Daten
 
 FEATURES & FIXES V??
-- Integration weitere Tests
+- ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
+  Alternativ prüfen, was TA hier vorschlägt...
