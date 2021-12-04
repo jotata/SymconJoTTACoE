@@ -20,7 +20,8 @@ Die Geräte verfügen über einen CAN-Bus, welcher via CMI mit dem Netzwerk verb
     1. [Erstellen einer neuen Instanz](#1-erstellen-einer-neuen-instanz)
     2. [Konfiguration der Instanz](#2-konfiguration-der-instanz)
     3. [Modul-Funktionen](#3-modul-funktionen)
-    4. [Fehlersuche](#5-fehlersuche)
+    4. [Modul-Aktionen](#4-modul-aktionen)
+    5. [Fehlersuche](#5-fehlersuche)
 6. [Anhang](#6-anhang)  
     1. [CoE-Datenübermittlung](#1-coe-datenübermittlung)
     2. [Modul-Informationen](#2-modul-informationen)
@@ -130,7 +131,14 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   ```
   Sendet einen Datenblock (*$BlockNr*) mit den Werten *$Values* und optional mit den Messgrössen (*$UnitIDs*) an die CMI/Regler. Dabei entsprechen *$Values[0] / $UnitIDs[0]* immer Wert / Messgrösse des ersten Netzwerkausganges vom Block. Die UnitID kann im Profilmanager (Float) den Profilen des Modules entnommen werden (Bsp.: JoTTACoE.Dollar.*51* => UnitID = *51*). Wird keine UnitID angegeben, erfolgt die Übertragung *dimensionslos*.*
 
-  *) Details zu BlockNr und Netzwerkausgang siehe [Datenblöcke](#1-coe-datenübermittlung).
+  *) Details zu BlockNr und Netzwerkausgang siehe [Datenblöcke](#1-coe-datenübermittlung). Die Werte werden immer gesendet, auch wenn kein Ausgang dafür definiert ist.
+
+  ### 4. Modul-Aktionen
+  Die folgenden Aktionen stehen für die Instanz zur Verfügung:
+  - **Sende analoge Daten:** Sendet 4 analoge Werte oder Variablen an die CMI/Regler. Wird beides angegeben, so wird immer der Wert der Variable gesendet. Besitzt die Variabe ein Profil des Modules, wird die entsprechende Messgrösse mitgeschickt, ansonsten erfolgt die Übertragung *dimensionslos*.
+  - **Sende digitale Daten:** Sendet 16 digitale Werte oder Variablen an die CMI/Regler. Wird beides angegeben, so wird immer der Wert der Variable gesendet.
+
+  In beiden Fällen werden die Werte immer gesendet, auch wenn kein entsprechender Ausgang definiert ist.
 
   ### 5. Fehlersuche
   Die Debug-Funktion der Instanz liefert detaillierte Informationen über empfangenen / gesendeten Daten und die genutzen Datenblöcke. Auch verworfene Werte werden hier ausgegeben.
@@ -185,6 +193,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 1.0:
+  - Aktionen zum Senden von analogen / digitalen Daten hinzugefügt
+
   Version 0.4 (BETA):
   - Automatische Konfiguration für UDP-Socket hinzugefügt
   - Button *Jetzt Senden* hinzugefügt

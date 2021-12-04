@@ -1,0 +1,96 @@
+{
+    "id": "{08CED9C0-0FCA-EC13-E24E-0024C41CF361}",
+    "caption": "Send analog data",
+    "description": "Sends 4 analog values or variables in a block to CMI",
+    "form": [
+        {
+            "type": "Select",
+            "name": "BlockNr",
+            "caption": "Block",
+            "options": [
+                {"caption": "Analog A1-A4", "value": 1},
+                {"caption": "Analog A5-A8", "value": 2},
+                {"caption": "Analog A9-A12", "value": 3},
+                {"caption": "Analog A13-A16", "value": 4},
+                {"caption": "Analog A17-20", "value": 5},
+                {"caption": "Analog A21-A24", "value": 6},
+                {"caption": "Analog A25-A28", "value": 7},
+                {"caption": "Analog A29-A32", "value": 8}
+            ]
+        },{
+            "type": "List",
+            "name": "ValueList",
+            "rowCount": 4,
+            "columns": [
+                {
+                    "name": "Nr",
+                    "caption": "Nr", 
+                    "width": "40px"
+                },{
+                    "name": "Value",
+                    "caption": "Value",
+                    "width": "150px",
+                    "edit": {
+                        "type": "NumberSpinner",
+                        "minimum": -32768,
+                        "maximum": 32767,
+                        "digits": 0
+                    }
+                },{
+                    "caption": "or",
+                    "width": "50px"
+                },{
+                    "name": "Variable",
+                    "caption": "Variable",
+                    "width": "auto",
+                    "edit": {
+                        "type": "SelectVariable",
+                        "validVariableTypes": [0,1,2]
+                    }
+                }
+            ],
+            "values": [
+                {"Nr": "1:", "Value": 0, "Variable": 0},
+                {"Nr": "2:", "Value": 0, "Variable": 0},
+                {"Nr": "3:", "Value": 0, "Variable": 0},
+                {"Nr": "4:", "Value": 0, "Variable": 0}
+            ]
+        }
+    ],
+    "action": [
+        "$values = []; $unitIDs = [];",
+        "foreach (json_decode($_IPS['ValueList'], true) as $v) {",
+        "   $val = $v['Value']; $u = 0;",
+        "   if ($v['Variable'] > 0) {",
+        "       $val = GetValue($v['Variable']);",
+        "       $var = IPS_GetVariable($v['Variable']);",
+        "       $p = $var['VariableProfile'];",
+        "       if ($var['VariableCustomProfile'] !== '') {",
+        "           $p = $var['VariableCustomProfile'];",
+        "       }",
+        "       if (strpos($p, 'JoTTACoE.') === 0) {",
+        "           $u = intval(substr($p, strrpos($p, '.') + 1));",
+        "       }",
+        "   }",
+        "   $values[] = $val; $unitIDs[] = $u;",
+        "}",
+        "JoTTACoE_Send($_IPS['TARGET'], $_IPS['BlockNr'], $values, $unitIDs);"
+    ],
+    "priority": 10,
+    "category": "target",
+    "restrictions": {
+        "objectType": [1],
+        "moduleID": ["{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}"],
+        "includeEnvironments": ["Default", "TestCommands"]
+    },
+    "locale": {
+        "de": {
+            "Send analog data": "Sende analoge Daten",
+            "Sends 4 analog values or variables in a block to CMI": "Sendet 4 analoge Werte oder Variablen an die CMI",
+            "Value": "Wert",
+            "or": "oder",
+            "Send analog data to {BlockNr, select, 1 {Block A1-A4} 2 {Block A5-A8} 3 {Block A9-A12} 4 {Block A13-A16} 5 {Block A17-A20} 6 {Block A21-A24} 7 {Block A25-A28} 8 {Block A29-A32}}: {ValueList}": "Sende analoge Daten an {BlockNr, select, 1 {Block A1-A4} 2 {Block A5-A8} 3 {Block A9-A12} 4 {Block A13-A16} 5 {Block A17-A20} 6 {Block A21-A24} 7 {Block A25-A28} 8 {Block A29-A32}}: {ValueList}"
+        }
+    },
+    "format": "Send analog data to {BlockNr, select, 1 {Block A1-A4} 2 {Block A5-A8} 3 {Block A9-A12} 4 {Block A13-A16} 5 {Block A17-A20} 6 {Block A21-A24} 7 {Block A25-A28} 8 {Block A29-A32}}: {ValueList}"
+}

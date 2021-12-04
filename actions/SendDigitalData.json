@@ -1,0 +1,91 @@
+{
+    "id": "{9A264AEA-079D-45BE-DB1B-792969CF189C}",
+    "caption": "Send digital data",
+    "description": "Sends 16 digital values or variables in a block to CMI",
+    "form": [
+        {
+            "type": "Select",
+            "name": "BlockNr",
+            "caption": "Block",
+            "options": [
+                {"caption": "Digital D1-D16", "value": 0},
+                {"caption": "Digital D17-D32", "value": 9}
+            ]
+        },{
+            "type": "List",
+            "name": "ValueList",
+            "rowCount": 16,
+            "columns": [
+                {
+                    "name": "Nr",
+                    "caption": "Nr", 
+                    "width": "40px"
+                },{
+                    "name": "Value",
+                    "caption": "Value",
+                    "width": "150px",
+                    "edit": {
+                        "type": "CheckBox"
+                    }
+                },{
+                    "caption": "or",
+                    "width": "50px"
+                },{
+                    "name": "Variable",
+                    "caption": "Variable",
+                    "width": "auto",
+                    "edit": {
+                        "type": "SelectVariable",
+                        "validVariableTypes": [0]
+                    }
+                }
+            ],
+            "values": [
+                {"Nr": "1:", "Value": 0, "Variable": 0},
+                {"Nr": "2:", "Value": 0, "Variable": 0},
+                {"Nr": "3:", "Value": 0, "Variable": 0},
+                {"Nr": "4:", "Value": 0, "Variable": 0},
+                {"Nr": "5:", "Value": 0, "Variable": 0},
+                {"Nr": "6:", "Value": 0, "Variable": 0},
+                {"Nr": "7:", "Value": 0, "Variable": 0},
+                {"Nr": "8:", "Value": 0, "Variable": 0},
+                {"Nr": "9:", "Value": 0, "Variable": 0},
+                {"Nr": "10:", "Value": 0, "Variable": 0},
+                {"Nr": "11:", "Value": 0, "Variable": 0},
+                {"Nr": "12:", "Value": 0, "Variable": 0},
+                {"Nr": "13:", "Value": 0, "Variable": 0},
+                {"Nr": "14:", "Value": 0, "Variable": 0},
+                {"Nr": "15:", "Value": 0, "Variable": 0},
+                {"Nr": "16:", "Value": 0, "Variable": 0}
+            ]
+        }
+    ],
+    "action": [
+        "$values = [];",
+        "foreach (json_decode($_IPS['ValueList'], true) as $v) {",
+        "   $val = $v['Value'];",
+        "   if ($v['Variable'] > 0) {",
+        "       $val = GetValue($v['Variable']);",
+        "   }",
+        "   $values[] = $val;",
+        "}",
+        "JoTTACoE_Send($_IPS['TARGET'], $_IPS['BlockNr'], $values, []);"
+    ],
+    "priority": 10,
+    "category": "target",
+    "restrictions": {
+        "objectType": [1],
+        "moduleID": ["{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}"],
+        "includeEnvironments": ["Default", "TestCommands"]
+    },
+    "locale": {
+        "de": {
+            "Send digital data": "Sende digitale Daten",
+            "Sends 16 digital values or variables in a block to CMI": "Sendet 16 digitale Werte oder Variablen an die CMI",
+            "Value": "Wert",
+            "or": "oder",
+            "Send digital data to {BlockNr, select, 0 {Block D1-D16} 9 {Block D17-D32}: {ValueList}": "Sende digitale Daten an {BlockNr, select, 0 {Block D1-D16} 9 {Block D17-D32}}: {ValueList}"
+        }
+    },
+    "format": "Send digital data to {BlockNr, select, 0 {Block D1-D16} 9 {Block D17-D32}: {ValueList}"
+}
