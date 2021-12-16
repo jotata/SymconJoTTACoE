@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   04.12.2021 10:59:40
+ * @Last Modified:   16.12.2021 22:13:01
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -11,28 +11,12 @@
  */
 
 TODO:
-x ReceiveData: Analoge Werte mit UnitID berechnen
-x ReceiveData: Werte unter berücksichtigung der neuen Konfiguration speichern
-x KonfigForm umbauen, so dass einzelne Variablen aktiviert werden können.
-x SendData: ganze Funktionalität
-x Automatische Übernahme der Einheit (Standard-Profil) => User kann dann immer noch mit Custom-Profil überschreiben
-x PHPUnit-Test 'testUnits' für units.json (Name darf keine Sonderzeichen / Leerzeichen enthalten)
-x Update ReadMe / Doku
-x Status, wenn bisher keine Daten empfangen wurden (Stimmen Remote-IP und Empfange von KnotenNr?)
-x Option zum deaktivieren des ReceiveData-Filters
-x ReceiveDataFilter prüfen und ev. anpassen. Ev. stimmt die Codierung der Knoten-Nr nicht (PrintScreen von Debug-Log im Forum beachten).
-   Details: https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe/126900/16?u=jotata
-x Anzeige der installierten Version im Konfigurationsform hinzufügen (inkl. Spenden PayPal-Button?)
-x Timer für Ausgänge senden auch wenn nicht geändert (Timeout auf Endgeräten)
-x Senden in SendAllOutput überarbeiten / Senden ohne RequestAction?
-x in RequestVariableAction muss die Ermittlung der UnitID überarbeitet werden. Es kann Profile mit Zahlen im NAmen geben (z.B. JoTTACoE.CO2-Gehalt.67). Diese können sonst nicht ermittelt werden.
-x Test-Center ein/ausblenden & Button für SendAllOutput hinzufügen
-x Kontrolle Voraussetzungen Gateway (Port & Active)
-x Fehleranalyse enabled / visible = false funktioniert initial bei NumberSpinner (Empfange von KnotenNr) nicht, über $this->UpdateFormField aber dann doch (IPS-Bug?)
+
 
 FEATURES & FIXES V1.0
 x PHPUnit-Test SendData & ReceiveData
 x Action zum Senden von Daten
+x Überprüfung der Gateway-Instanz
 
 FEATURES & FIXES V??
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
