@@ -44,8 +44,8 @@ class JoTTACoE extends IPSModule {
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
         $this->RegisterPropertyBoolean('DisableReceiveDataFilter', 0); //Wenn ReceiveDataFilter deaktiviert werden soll
         $this->RegisterPropertyInteger('NodeNr', 32); //KnotenNr dieser Instanz
-        $this->RegisterPropertyInteger('OutputTimer', 1); //Sende-Intervall der Ausgänge
-        $this->RegisterTimer('OutputTimer', 1 * 60 * 1000, static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Ausgänge jede Minute senden
+        $this->RegisterPropertyInteger('OutputTimer', 0); //Sende-Intervall der Ausgänge
+        $this->RegisterTimer('OutputTimer', 0, static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Timer zum Senden der Ausgänge
         $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
 
