@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   04.12.2021 10:49:33
+ * @Last Modified:   16.12.2021 21:48:16
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -28,6 +28,7 @@ class JoTTACoE extends IPSModule {
     protected const MODULEID = '{61108236-EBFE-207F-2FEC-55EDB2B4FDFF}';
     protected const STATUS_Ok_InstanceActive = 102;
     protected const STATUS_Ok_WaitingData = 204;
+    protected const STATUS_Error_WrongIO = 418;
     protected const STATUS_Error_FailedDependency = 424;
 
     /**
@@ -560,6 +561,10 @@ class JoTTACoE extends IPSModule {
      */
     private function CheckIOConfig() {
         $pID = IPS_GetInstance($this->InstanceID)['ConnectionID'];
+        if (@IPS_GetInstance($pID)['ModuleInfo']['ModuleID'] !== '{82347F20-F541-41E1-AC5B-A636FD3AE2D8}') { //Parent ist kein UDP-Socket
+            $this->SetStatus(self::STATUS_Error_WrongIO);
+            return false;
+        }
         if ($this->HasActiveParent()) {
             $conf = json_decode(IPS_GetConfiguration($pID));
             if ($conf->BindPort === 5441 && $conf->Open === true && $conf->EnableBroadcast === false) {

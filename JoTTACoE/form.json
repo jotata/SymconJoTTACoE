@@ -5,9 +5,13 @@
             "icon": "active", 
             "caption": "Waiting for data..."
         },{
+            "code": 418, 
+            "icon": "error", 
+            "caption": "Wrong gateway instance. Please change to UDP Socket."
+        },{
             "code": 424, 
             "icon": "error", 
-            "caption": "Error - Failed Dependency!"
+            "caption": "The configuration of the gateway is incorrect! Please modify."
         }
     ],
     "elements":[

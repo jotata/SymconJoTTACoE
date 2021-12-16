@@ -2,7 +2,8 @@
     "translations": {
         "de": {
             "Waiting for data...": "Warte auf Daten...",
-            "Error - Failed Dependency!": "Fehler - Voraussetzungen nicht erfüllt!",
+            "Wrong gateway instance. Please change to UDP Socket.": "Falsche Gateway-Instanz. Bitte auf UDP Socket ändern.",
+            "The configuration of the gateway is incorrect! Please modify.": "Die Konfiguration des Gateways ist fehlerhaft! Bitte ändern.",
             "Configuration Remote CMI": "Konfiguration Remote-CMI",
             "IP Address": "IP-Adresse",
             "Listen to Node Number": "Empfange von Knoten-Nr",
