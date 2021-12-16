@@ -62,13 +62,14 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
    2. Im Schnellfilter **CoE-Knoten** eingeben
    3. Das Gerät **CoE-Knoten (Remote-CMI)** auswählen
    4. Name & Ort anpassen (optional)
-   5. Falls noch keine UDP-Socket Instanz vorhanden ist, wird eine solche erstellt. Diese wird entsprechend konfiguriert:
+   5. Es wird immer eine neue UDP Socket Instanz erstellt. Diese wird entsprechend konfiguriert:
       - **Socket öffnen:** Ein
       - **Sende-Host/-Port:** leer lassen (Derselbe UDP-Socket kann für mehrere Instanzen genutzt werden. Die IP der jeweiligen CMI wird direkt im Modul eingestellt.)
       - **Empf.-Host:** IP-Adresse von IPS auswählen (Gleiche IP muss auf der CMI in der Konfiguration der CoE-Ausgänge angegeben werden.)
       - **Empf.-Port:** 5441
       - **Aktiviere Broadcast:** Aus
       - **Aktiviere Reuse Address:** Aus
+      Bei mehreren Instanzen des Modules muss derselbe UDP Socket verwendet werden. Es ist nicht möglich, mehrere UDP Sockets mit dem gleichen Empfangs-Port einzurichten.
 
   ### 2. Konfiguration der Instanz
   - **IP-Adresse:** IP-Adresse der CMI
@@ -195,6 +196,8 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   ### 3. Changelog
   Version 1.0:
   - Aktionen zum Senden von analogen / digitalen Daten hinzugefügt
+  - Überprüfung Konfiguration Gateway hinzugefügt
+  - FIX: Warnung im Log beim Erstellen der Instanz erscheint nun nicht mehr
 
   Version 0.4 (BETA):
   - Automatische Konfiguration für UDP-Socket hinzugefügt
