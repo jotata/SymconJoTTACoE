@@ -48,6 +48,7 @@ class JoTTACoE extends IPSModule {
         $this->RegisterTimer('OutputTimer', 0, static::PREFIX . '_SendAllOutputs($_IPS["TARGET"]);'); //Timer zum Senden der Ausgänge
         $this->RegisterPropertyString('Analog', '[{"ID":1,"Ident":"A1","Config":2}]'); //Konfiguration Analoge Variablen
         $this->RegisterPropertyString('Digital', '[{"ID":1,"Ident":"D1","Config":2}]'); //Konfiguration Digitale Variablen
+        $this->RegisterMessage($this->InstanceID, IM_CONNECT); //Instanz Bereit
 
         //Units einlesen und analoge Profile verwalten
         $units = file_get_contents(__DIR__ . '/units.json');
@@ -72,11 +73,25 @@ class JoTTACoE extends IPSModule {
 
     /**
      * Interne Funktion des SDK.
-     * Definiert die Konfiguration der übergeordneten Instanz
+     * Wird ausgeführt wenn eine registrierte Nachricht verfügbar ist.
      * @access public
      */
     public function GetConfigurationForParent() {
         return '{"BindPort":5441,"Host":"","Port":0,"EnableBroadcast":false,"EnableReuseAddress":false}';
+    public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data) {
+        if ($MessageID === IM_CONNECT) { //Instanz ist bereit
+            $this->RegisterMessage($this->InstanceID, FM_CONNECT); //Gateway verbunden/geändert
+            $this->RegisterMessage($this->InstanceID, FM_DISCONNECT); //Gateway entfernt
+        }
+        if ($MessageID === IM_CONNECT || $MessageID === FM_CONNECT) { //Instanz ist bereit oder Gateway wurde geändert
+            foreach ($this->GetMessageList() as $id => $msgs) { //alte Nachrichten deaktivieren
+                $this->UnregisterMessage($id, IM_CHANGESETTINGS);
+            }
+            $this->RegisterMessage(IPS_GetInstance($this->InstanceID)['ConnectionID'], IM_CHANGESETTINGS); //Gateway-Einstellungen geändert
+        }
+        if ($this->CheckIOConfig() === true) {
+            $this->SetStatus(self::STATUS_Ok_WaitingData);
+        }
     }
 
     /**
