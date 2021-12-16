@@ -39,7 +39,7 @@ class JoTTACoE extends IPSModule {
         parent::Create();
 
         //Eigenschaften definieren
-        $this->ConnectParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}'); //UDP-Socket
+        $this->RequireParent('{82347F20-F541-41E1-AC5B-A636FD3AE2D8}'); //UDP-Socket
         $this->RegisterPropertyString('RemoteIP', ''); //IP der Remote-CMI
         $this->RegisterPropertyInteger('RemoteNodeNr', 0); //Konten, von welchem Daten empfamgen werden
         $this->RegisterPropertyBoolean('DisableReceiveDataFilter', 0); //Wenn ReceiveDataFilter deaktiviert werden soll
@@ -76,8 +76,6 @@ class JoTTACoE extends IPSModule {
      * Wird ausgeführt wenn eine registrierte Nachricht verfügbar ist.
      * @access public
      */
-    public function GetConfigurationForParent() {
-        return '{"BindPort":5441,"Host":"","Port":0,"EnableBroadcast":false,"EnableReuseAddress":false}';
     public function MessageSink($TimeStamp, $SenderID, $MessageID, $Data) {
         if ($MessageID === IM_CONNECT) { //Instanz ist bereit
             $this->RegisterMessage($this->InstanceID, FM_CONNECT); //Gateway verbunden/geändert
@@ -101,10 +99,6 @@ class JoTTACoE extends IPSModule {
      */
     public function ApplyChanges() {
         parent::ApplyChanges();
-
-        if ($this->GetStatus() == IS_CREATING) { //Während die Instanz erstellt wird, sind die Instanz-Properties noch nicht verfügbar
-            return;
-        }
 
         //ReceiveDataFilter anpassen
         $filter = '';
@@ -150,7 +144,9 @@ class JoTTACoE extends IPSModule {
         $this->SetTimerInterval('OutputTimer', $this->ReadPropertyInteger('OutputTimer') * 60 * 1000); //Konfiguration in Minuten zu Millisekunden
 
         //Status anpassen
-        $this->SetStatus(self::STATUS_Ok_WaitingData);
+        if ($this->CheckIOConfig() === true) {
+            $this->SetStatus(self::STATUS_Ok_WaitingData);
+        }
     }
 
     /**
@@ -196,7 +192,7 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function ReceiveData($JSONString) {
-        if ($this->GetStatus() !== self::STATUS_Ok_InstanceActive) {
+        if ($this->GetStatus() == self::STATUS_Ok_WaitingData) {
             $this->SetStatus(self::STATUS_Ok_InstanceActive);
         }
         $this->SendDebug('RECEIVE Data -> JSONString', $JSONString, 0);
@@ -300,8 +296,7 @@ class JoTTACoE extends IPSModule {
      * @access public
      */
     public function Send(int $BlockNr, array $Values, array $UnitIDs = []) {
-        if ($this->HasActiveParent() === false) {
-            $this->SetStatus(self::STATUS_Error_FailedDependency);
+        if ($this->CheckIOConfig() === false) {
             $this->ThrowMessage('I/O-Instance not ready - check gateway -> Stopping');
             return false;
         }
@@ -557,5 +552,21 @@ class JoTTACoE extends IPSModule {
             $val = "$hi.$low";
         }
         return floatval($val);
+    }
+
+    /**
+     * Überprüft die Konfiguration der übergeordneten I/O-Instanz (UDP-Socket)
+     * @return boolean true wenn alles i.O. sonst false
+     */
+    private function CheckIOConfig() {
+        $pID = IPS_GetInstance($this->InstanceID)['ConnectionID'];
+        if ($this->HasActiveParent()) {
+            $conf = json_decode(IPS_GetConfiguration($pID));
+            if ($conf->BindPort === 5441 && $conf->Open === true && $conf->EnableBroadcast === false) {
+                return true;
+            }
+        }
+        $this->SetStatus(self::STATUS_Error_FailedDependency);
+        return false;
     }
 }
