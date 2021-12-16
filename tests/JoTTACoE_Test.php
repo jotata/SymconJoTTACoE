@@ -7,7 +7,7 @@ declare(strict_types=1);
  * @File:            JoTTACoE_Test.php
  * @Create Date:     13.11.2021 15:45:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   03.12.2021 16:45:19
+ * @Last Modified:   16.12.2021 23:38:36
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -89,7 +89,7 @@ class JoTTACoE_Test extends TestCase {
         IPS_CreateVariableProfile('~Switch', VARIABLETYPE_BOOLEAN); //Wird für Digitale Variablen benötigt
         //(Parent)Instanz erstellen
         $soID = IPS_CreateInstance($this->socketID);
-        IPS_SetConfiguration($soID, json_encode(['Host' => '127.0.0.1', 'Open' => true, 'Port' => 5441]));
+        IPS_SetConfiguration($soID, json_encode(['Open' => true, 'BindIP' => '127.0.0.1', 'BindPort' => 5441, 'EnableBroadcast' => false]));
         IPS_ApplyChanges($soID);
         $iID = IPS_CreateInstance($this->moduleID);
         IPS_ConnectInstance($iID, $soID);
