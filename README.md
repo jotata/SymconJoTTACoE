@@ -69,6 +69,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
       - **Empf.-Port:** 5441
       - **Aktiviere Broadcast:** Aus
       - **Aktiviere Reuse Address:** Aus
+      
       Bei mehreren Instanzen des Modules muss derselbe UDP Socket verwendet werden. Es ist nicht möglich, mehrere UDP Sockets mit dem gleichen Empfangs-Port einzurichten.
 
   ### 2. Konfiguration der Instanz
