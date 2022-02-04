@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   16.12.2021 21:48:16
+ * @Last Modified:   04.02.2022 14:31:20
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -350,7 +350,7 @@ class JoTTACoE extends IPSModule {
         }
         $this->SendDebug("SEND Data ($block->Text) -> RAW", $data, 1);
         $data = utf8_encode(pack('C2', $this->ReadPropertyInteger('NodeNr'), $block->Nr) . $data); //Header (8Bit KnotenNr + 8Bit BlockNr) hinzufügen & utf8-codieren
-        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*Erweitert (Socket) TX GUID*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
+        $data = json_encode(['DataID' => '{C8792760-65CF-4C53-B5C7-A30FCC84FEFE}' /*Erweitert (Socket) TX GUID*/, 'Type' => 0 /*Data*/, 'ClientIP' => $this->ReadPropertyString('RemoteIP'), 'ClientPort' => 5441, 'Buffer' => $data]);
         $this->SendDebug("SEND Data ($block->Text) -> JSONString", $data, 0);
         $response = @$this->SendDataToParent($data);
 
