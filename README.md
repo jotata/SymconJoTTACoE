@@ -195,6 +195,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 1.1:
+  - FIX: Feld *Type* wird num beim Senden im JSON-String mitgegeben
+
   Version 1.0:
   - Aktionen zum Senden von analogen / digitalen Daten hinzugefügt
   - Überprüfung Konfiguration Gateway hinzugefügt
