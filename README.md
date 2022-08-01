@@ -145,6 +145,15 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   ### 5. Fehlersuche
   Die Debug-Funktion der Instanz liefert detaillierte Informationen über empfangenen / gesendeten Daten und die genutzen Datenblöcke. Auch verworfene Werte werden hier ausgegeben.
 
+  **Fehlerhafte Werte bei CAN-Übermittlung**
+  Die max. Werte für die Datenübertragung via CAN-Bus sind technisch limitiert (Details siehe [Anhang](#6-anhang) - Analoge Daten). Auf dem Regler können aber teilweise grössere Werte eingegeben / verwaltet werden als der CAN-Bus übertragen kann.
+  Dadurch ist es möglich, dass einige Einheiten auf dem Regler zwar korrekt angezeigt werden, bei der Übertragung via CAN-Bus jedoch verfälscht / zerstört werden, wenn die Werte zu gross sind.
+  
+  Folgende Einheiten sind bisher bekannt: Arbeitszahl, Euro, Dollar, dimensionslos (,5)
+
+  Wenn man die Einheiten Dimensionlos überträgt und anschliessend manuell die Kommastelle wieder umrechnet, ist eine übertragung theoretisch möglich, aber die Genauigkeit geht verloren.
+  Dieses Problem muss durch Technische Alternative im CAN-Bus Protokoll behoben werden. 
+
 ## 6. Anhang
   ### 1. CoE-Datenübermittlung
   CAN over Ethernet (CoE) versendet immer mehrere Werte als Datenblöcke per UDP auf Port 5441. Bei analogen Daten werden jeweils 4 Werte, bei digitalen Daten 16 Werte gleichzeitig miteinander versendet (auch wenn diese nicht definiert oder geändert wurden).
@@ -197,6 +206,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   ### 3. Changelog
   Version 1.1:
   - FIX: Feld *Type* wird num beim Senden im JSON-String mitgegeben
+  - FIX: Werte mit Einheit "Leistung KW" werden nun korrekt umgerechnet (obwohl der Regler 2 Nachkommastellen unterstützt, wird bei dieser Einheit über den CAN-Bus nur 1 Nachkommastelle übertragen)
 
   Version 1.0:
   - Aktionen zum Senden von analogen / digitalen Daten hinzugefügt
