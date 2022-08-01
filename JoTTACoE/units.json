@@ -9,7 +9,7 @@
     {"UnitID":7,"Name":"Temperatur","Suffix":"K","Decimals":1},
     {"UnitID":8,"Name":"Prozent","Suffix":"%","Decimals":1},
     {"UnitID":9,"Name":"","Suffix":"","Decimals":0},
-    {"UnitID":10,"Name":"Leistung","Suffix":"kW","Decimals":2},
+    {"UnitID":10,"Name":"Leistung","Suffix":"kW","Decimals":1},
     {"UnitID":11,"Name":"Energie","Suffix":"kWh","Decimals":1},
     {"UnitID":12,"Name":"Energie","Suffix":"MWh","Decimals":0},
     {"UnitID":13,"Name":"Spannung","Suffix":"V","Decimals":2},
