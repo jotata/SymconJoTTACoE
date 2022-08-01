@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   01.08.2022 12:48:21
+ * @Last Modified:   01.08.2022 13:28:49
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -11,10 +11,10 @@
  */
 
 TODO:
+- 
 
-
-FEATURES & FIXES V1.1
-x Unit "Leistung kW" (ID 10) Dezimalstelle von 2 auf 1 korrigieren (TA runden bereits intern zur CMI auf 1 Kommastelle, obwohl die UVR 2 Kommastellen anzeigt) (https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe/126900/26?u=jotata)
+FEATURES & FIXES V1.2
+- 
 
 FEATURES & FIXES V??
 - ev. Umrechnung für Werte von unsigned Short (0-65535). Werte > +32767 werden auf dem CAN-Bus als negative Werte übertragen, könnten aber ev. einfach als unsigned Short ausgelesen und als signed geschrieben werden. Müsste pro Variable einstellbar sein.
