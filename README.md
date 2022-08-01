@@ -205,6 +205,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 1.2 BETA
+  - noch keine Änderungen zu 1.1
+  
   Version 1.1:
   - FIX: Feld *Type* wird num beim Senden im JSON-String mitgegeben
   - FIX: Werte mit Einheit "Leistung KW" werden nun korrekt umgerechnet (obwohl der Regler 2 Nachkommastellen unterstützt, wird bei dieser Einheit über den CAN-Bus nur 1 Nachkommastelle übertragen)
