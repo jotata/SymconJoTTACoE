@@ -146,6 +146,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   Die Debug-Funktion der Instanz liefert detaillierte Informationen über empfangenen / gesendeten Daten und die genutzen Datenblöcke. Auch verworfene Werte werden hier ausgegeben.
 
   **Fehlerhafte Werte bei CAN-Übermittlung**
+  
   Die max. Werte für die Datenübertragung via CAN-Bus sind technisch limitiert (Details siehe [Anhang](#6-anhang) - Analoge Daten). Auf dem Regler können aber teilweise grössere Werte eingegeben / verwaltet werden als der CAN-Bus übertragen kann.
   Dadurch ist es möglich, dass einige Einheiten auf dem Regler zwar korrekt angezeigt werden, bei der Übertragung via CAN-Bus jedoch verfälscht / zerstört werden, wenn die Werte zu gross sind.
   
