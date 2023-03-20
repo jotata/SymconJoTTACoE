@@ -209,7 +209,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   - noch keine Änderungen zu 1.1
   
   Version 1.1:
-  - FIX: Feld *Type* wird num beim Senden im JSON-String mitgegeben
+  - FIX: Feld *Type* wird nun beim Senden im JSON-String mitgegeben
   - FIX: Werte mit Einheit "Leistung KW" werden nun korrekt umgerechnet (obwohl der Regler 2 Nachkommastellen unterstützt, wird bei dieser Einheit über den CAN-Bus nur 1 Nachkommastelle übertragen)
 
   Version 1.0:
