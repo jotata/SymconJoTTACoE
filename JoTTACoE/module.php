@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   04.02.2022 14:31:20
+ * @Last Modified:   21.04.2023 13:11:07
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -106,14 +106,14 @@ class JoTTACoE extends IPSModule {
         if ($this->ReadPropertyBoolean('DisableReceiveDataFilter') === false) {
             $remoteNodeNr = trim(json_encode(chr($this->ReadPropertyInteger('RemoteNodeNr')), JSON_UNESCAPED_SLASHES), '"'); //RemoteNodeNr JSON-Codiert (JSON_UNESCAPED_SLASHES => 47 => / anstatt \/)
             if (substr($remoteNodeNr, 0, 2) === '\u') { //https://community.symcon.de/t/modul-coe-knoten-jottacoe-technische-alternative-via-can-over-ethernet-coe/126900/18
-                $remoteNodeNr = '\u' . strtoupper(substr($remoteNodeNr, 2)); //json_encode produziert Unicode (0-7, 11, 14-31) mit Kleinbuchstaben, im Buffer sind es aber Grossbuchstaben
+                $remoteNodeNr = '\u' . strtoupper(substr($remoteNodeNr, 2)); //json_encode produziert Unicode (0-7, 11, 14-31) mit Kleinbuchstaben, im Buffer sind es aber Grossbuchstaben (siehe Beschreibung https://www.symcon.de/de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/module/setreceivedatafilter/)
             }
             if ($remoteNodeNr === '\u0000') { //0 => Empfang deaktiviert
                 $filter = 'DEAKTIVIERT';
             } else { //Empfang aktiviert
                 $remoteIP = $this->ReadPropertyString('RemoteIP');
-                $filter = '.*' . preg_quote(',"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
-                $filter .= '.*' . preg_quote(',"ClientIP":"' . $remoteIP . '",'); //Client-IP muss IP der Remote-CMI entsprechen
+                $filter = '.*' . preg_quote('"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
+                $filter .= '.*' . preg_quote('"ClientIP":"' . $remoteIP . '"'); //Client-IP muss IP der Remote-CMI entsprechen
             }
         }
         $this->SendDebug('Set ReceiveDataFilter to', "$filter.*", 0);
@@ -201,6 +201,7 @@ class JoTTACoE extends IPSModule {
         $buffer = utf8_decode($data->Buffer);
         $header = unpack('CNodeNr/CBlock', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
         $buffer = substr($buffer, 2); //Header entfernen
+        $this->SendDebug("RECEIVE Data -> Header", json_encode($header), 0);
 
         /** Daten im Buffer sind wie folgt aufgebaut:
          * Analoge Pakete CoE (erkennbar am Block aus Byte 2):
@@ -227,7 +228,7 @@ class JoTTACoE extends IPSModule {
         $values = [];
         $block = $this->GetBlockInfoByNr($header['Block']);
         if (@$block->Type === 'D') { //Digitale Daten
-            $this->SendDebug("RECEIVE DATA ($block->Text) -> RAW", $buffer, 1);
+            $this->SendDebug("RECEIVE Data ($block->Text) -> RAW", $buffer, 1);
             $hex = unpack('H2', $buffer); //nur Byte 3+4 enthalten digitale Daten
             $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
             $bin = str_repeat('0', (16 - strlen($bin))) . $bin; //auf 16 Bit mit 0 auffüllen
