@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   21.04.2023 13:11:07
+ * @Last Modified:   21.04.2023 13:32:58
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -201,7 +201,7 @@ class JoTTACoE extends IPSModule {
         $buffer = utf8_decode($data->Buffer);
         $header = unpack('CNodeNr/CBlock', $buffer); //Erstes Byte beinhaltet NodeNr, zweites Byte Datentyp/Länge (0=Digital, >0 = Länge analoger Daten)
         $buffer = substr($buffer, 2); //Header entfernen
-        $this->SendDebug("RECEIVE Data -> Header", json_encode($header), 0);
+        $this->SendDebug('RECEIVE Data -> Header', json_encode($header), 0);
 
         /** Daten im Buffer sind wie folgt aufgebaut:
          * Analoge Pakete CoE (erkennbar am Block aus Byte 2):
