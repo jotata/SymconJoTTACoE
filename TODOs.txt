@@ -3,7 +3,7 @@
  * @File:            TODOs.txt
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   01.08.2022 13:28:49
+ * @Last Modified:   21.04.2023 13:19:46
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -11,9 +11,9 @@
  */
 
 TODO:
-- 
+x Neue Reihenfolge des ReceiveData-Buffers im ReceiveData-Filter berücksichtigen
 
-FEATURES & FIXES V1.2
+FEATURES & FIXES V1.3
 - 
 
 FEATURES & FIXES V??
