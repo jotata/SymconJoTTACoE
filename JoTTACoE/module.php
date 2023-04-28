@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   21.04.2023 13:32:58
+ * @Last Modified:   28.04.2023 11:53:35
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -218,8 +218,8 @@ class JoTTACoE extends IPSModule {
          *
          * Digitale Pakete CoE (erkennbar am Block aus Byte 2):
          * - Byte 1 = SenderKnoten
-         * - Byte 2 = Block (0,9) => (0=A1-A16, 9=A17-A32) => es werden immer 16 Bit (16 Ausgänge) pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
-         * - Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1)
+         * - Byte 2 = Block (0,9) => (0=D1-D16, 9=D17-D32) => es werden immer 16 Bit (16 Ausgänge) pro Paket versendet. Wenn ein NetzwerkAusgang nicht konfiguriert ist, dann wird er im Paket mit 0 aufgefüllt/versendet
+         * - Byte 3+4 = 16 Bit mit digitalen Werten pro Ausgang (0 oder 1). Seit CMI FW-Version 1.39.1: Byte3 = D1-8/D17-25, Byte4 = D9-16/D26-32 (vorher waren Byte 3+4 vertauscht)
          * - Byte 5-14 = nicht genutzt (aber anscheinend mit 0 aufgefüllt)
          */
 
@@ -229,12 +229,12 @@ class JoTTACoE extends IPSModule {
         $block = $this->GetBlockInfoByNr($header['Block']);
         if (@$block->Type === 'D') { //Digitale Daten
             $this->SendDebug("RECEIVE Data ($block->Text) -> RAW", $buffer, 1);
-            $hex = unpack('H2', $buffer); //nur Byte 3+4 enthalten digitale Daten
+            $hex = unpack('H4', substr($buffer, 1, 1) . substr($buffer, 0, 1)); //nur Byte 3+4 enthalten digitale Daten. Seit CMI FW-Version 1.39.1: Byte3 = D1-8/D17-25, Byte4 = D9-16/D26-32 (vorher waren Byte 3+4 vertauscht)
             $bin = base_convert($hex[1], 16, 2); //in Binär-Zeichenfolge umwandeln
             $bin = str_repeat('0', (16 - strlen($bin))) . $bin; //auf 16 Bit mit 0 auffüllen
             $buffer = strrev($bin); //Bits in Reihenfolge umdrehen
             $this->SendDebug("RECEIVE Data ($block->Text) -> Bits", $bin, 0);
-            for ($i = 0; $i < 16; $i++) { //Bits durchlaufen und den entsprechenden Values zuweisen
+            for ($i = 0; $i < 16; $i++) { //Bits im Buffer durchlaufen und den entsprechenden Values zuweisen
                 $bit = substr($buffer, $i, 1);
                 $ident = $block->Type . ($block->Min + $i);
                 $values[$ident]['Value'] = boolval($bit);
