@@ -37,7 +37,7 @@ Es ist auch möglich, das Modul in Kombination mit dem in IPS integrierten Modul
 
 ## 2. Voraussetzungen
  - IPS 6.0 oder höher  
- - CMI von Technische Alternative
+ - CMI von Technische Alternative mit FW-Version 1.39.1 oder höher
  - Für den Empfang via CoE müssen die CoE-Ausgänge auf der CMI entsprechend konfiguriert werden.
  - Zum Senden via CoE müssen die entsprechenden CAN-Eingänge auf dem Regler konfiguriert werden.
 
@@ -207,6 +207,7 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   ### 3. Changelog
   Version 1.2
   - FIX: Neue Reihenfolge des ReceiveData-Buffers im ReceiveData-Filter berücksichtigt
+  - FIX: Neue Reihenfolge der Daten-Bytes bei digitalen Werten ab CMI FW-Version 1.39.1 berücksichtigt
   
   Version 1.1:
   - FIX: Feld *Type* wird nun beim Senden im JSON-String mitgegeben
