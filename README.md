@@ -205,6 +205,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 1.3
+  - FIX: Funktioniert nun auch mit IPS 7.0
+  
   Version 1.2
   - FIX: Neue Reihenfolge des ReceiveData-Buffers im ReceiveData-Filter berücksichtigt
   - FIX: Neue Reihenfolge der Daten-Bytes bei digitalen Werten ab CMI FW-Version 1.39.1 berücksichtigt
