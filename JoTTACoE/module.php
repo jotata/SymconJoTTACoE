@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @File:            module.php
  * @Create Date:     05.11.2020 11:25:00
  * @Author:          Jonathan Tanner - admin@tanner-info.ch
- * @Last Modified:   28.04.2023 11:53:35
+ * @Last Modified:   18.05.2023 11:06:25
  * @Modified By:     Jonathan Tanner
  * @Copyright:       Copyright(c) 2020 by JoT Tanner
  * @License:         Creative Commons Attribution Non Commercial Share Alike 4.0
@@ -114,10 +114,14 @@ class JoTTACoE extends IPSModule {
                 $remoteIP = $this->ReadPropertyString('RemoteIP');
                 $filter = '.*' . preg_quote('"Buffer":"' . $remoteNodeNr); //Erstes Byte von Buffer muss RemoteNodeNr JSON-Codiert entsprechen
                 $filter .= '.*' . preg_quote('"ClientIP":"' . $remoteIP . '"'); //Client-IP muss IP der Remote-CMI entsprechen
+                $filter = "$filter.*";
+                //$filter = "/$filter.*/i"; //Keine Unterscheidung von Gross-/Kleinschreibung, da json_encode/decode z.T. Gross-/Kleinschreibung verändert 
             }
         }
-        $this->SendDebug('Set ReceiveDataFilter to', "$filter.*", 0);
-        $this->SetReceiveDataFilter("$filter.*");
+        //$this->SendDebug('Set ReceiveDataFilter to', "$filter.*", 0);
+        //$this->SetReceiveDataFilter("$filter.*");
+        $this->SendDebug('Set ReceiveDataFilter to', $filter, 0);
+        $this->SetReceiveDataFilter($filter);
 
         $units = json_decode($this->GetBuffer('Units'));
         //Analoge Instanz-Variablen pflegen
