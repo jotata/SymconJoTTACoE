@@ -205,6 +205,9 @@ Update erfolgt ebenfalls über den Module-Store. Einfach beim installierten Modu
   | JoTTACoE | Device | Technische Alternative | CoE-Knoten | JoTTACoE | {61108236-EBFE-207F-2FEC-55EDB2B4FDFF} |
 
   ### 3. Changelog
+  Version 1.3.1
+  - FIX: Update libs für Symcon 9.1
+
   Version 1.3
   - FIX: Funktioniert nun auch mit IPS 7.0
   
